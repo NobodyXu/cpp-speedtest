@@ -93,6 +93,9 @@ public:
     std::size_t getinfo_sizeof_response_body();
 
     ~handle_t();
+
+    // High-level functions
+    std::string readall();
 };
 
 class Url {

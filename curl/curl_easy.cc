@@ -128,4 +128,20 @@ handle_t::~handle_t()
     if (curl_easy)
         curl_easy_cleanup(curl_easy);
 }
+
+std::string handle_t::readall()
+{
+    std::string response;
+
+    auto callback = [](char *buffer, std::size_t size, void *data) {
+        std::string &response = *static_cast<std::string*>(data);
+        response.append(buffer, buffer + size - 1);
+        return size;
+    };
+
+    request_get(callback, &response);
+    perform();
+
+    return response;
+}
 } /* namespace curl */
