@@ -63,18 +63,19 @@ handle_t curl_t::create_conn(const Url &url, const char *useragent, const char *
 
     // Fail on HTTP 4xx errors
     CHECK(curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L));
-    // Set useragent
-    CHECK(curl_easy_setopt(curl, CURLOPT_USERAGENT, useragent));
-    // Set encoding
-    CHECK(curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, encoding));
 
     handle_t handle{curl};
-    handle.set_url(url);
+    handle.set(url, useragent, encoding);
     return handle;
 }
-void handle_t::set_url(const Url &url)
+void handle_t::set(const Url &url, const char *useragent, const char *encoding)
 {
+    // Set url
     CHECK(curl_easy_setopt(curl_easy, CURLOPT_CURLU, url.url));
+    // Set useragent
+    CHECK(curl_easy_setopt(curl_easy, CURLOPT_USERAGENT, useragent));
+    // Set encoding
+    CHECK(curl_easy_setopt(curl_easy, CURLOPT_ACCEPT_ENCODING, encoding));
 }
 
 void handle_t::request_get(download_callback_t callback, void *data_arg)

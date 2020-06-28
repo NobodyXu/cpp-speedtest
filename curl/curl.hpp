@@ -77,7 +77,7 @@ public:
     /**
      * @param url must exist until perform() returns.
      */
-    void set_url(const Url &url);
+    void set(const Url &url, const char *useragent, const char *encoding);
 
     void request_get(download_callback_t callback, void *data);
     /**
@@ -103,7 +103,7 @@ class Url {
     void *url;
 
 public:
-    friend void handle_t::set_url(const Url &url);
+    friend void handle_t::set(const Url &url, const char *useragent, const char *encoding);
 
     class Exception: public curl::Exception {
     public:
