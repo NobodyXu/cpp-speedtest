@@ -144,4 +144,13 @@ std::string handle_t::readall()
 
     return response;
 }
+void handle_t::establish_connection_only()
+{
+    CHECK(curl_easy_setopt(curl_easy, CURLOPT_HTTPGET, 1L));
+    curl_easy_setopt(curl_easy, CURLOPT_BUFFERSIZE, CURL_MAX_READ_SIZE);
+
+    curl_easy_setopt(curl_easy, CURLOPT_NOBODY, 1);
+    perform();
+    curl_easy_setopt(curl_easy, CURLOPT_NOBODY, 0);
+}
 } /* namespace curl */

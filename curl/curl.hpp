@@ -96,6 +96,7 @@ public:
 
     // High-level functions
     std::string readall();
+    void establish_connection_only();
 };
 
 class Url {
