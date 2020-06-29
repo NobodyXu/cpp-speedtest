@@ -1,7 +1,6 @@
 CXX := clang++
 
 CXXFLAGS := -std=c++17 $(shell curl-config --cflags)
-LDFLAGS := $(shell curl-config --libs)
 
 SRCS=$(shell find */* -type f -name '*.cc' -not -path ./test)
 DEPS=$(SRCS:.cc=.d)
@@ -12,10 +11,9 @@ TARGET_BIN=cpp-speedtest
 # Autobuild dependency, adapted from:
 #    http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/#include
 DEPFLAGS = -MT $@ -MMD -MP -MF $*.Td
-DEPFILES := $(SRCS:%.cc=%.d)
 
-$(DEPFILES) cpp-speedtest.d: 
-include $(wildcard $(DEPFILES))
+$(DEPS) cpp-speedtest.d: 
+include $(wildcard $(DEPS))
 
 ## Disable implict pattern
 %.o : %.cc

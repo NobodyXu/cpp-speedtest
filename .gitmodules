@@ -1,0 +1,3 @@
+[submodule "curl-cpp"]
+	path = curl-cpp
+	url = https://github.com/NobodyXu/curl-cpp
