@@ -1,3 +1,6 @@
 [submodule "curl-cpp"]
 	path = curl-cpp
 	url = https://github.com/NobodyXu/curl-cpp
+[submodule "pugixml"]
+	path = pugixml
+	url = https://github.com/zeux/pugixml.git
