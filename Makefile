@@ -5,7 +5,7 @@ include curl-cpp/linking.mk
 
 CXXFLAGS += -flto -O3 -fno-exceptions -fno-rtti
 
-SRCS=$(shell find */* -type f -name '*.cc' -not -path ./test)
+SRCS=$(shell find */* -type f -name '*.cc' -not -path ./test -not -path ./curl-cpp/)
 DEPS=$(SRCS:.cc=.d)
 OBJS=$(SRCS:.cc=.o)
 
