@@ -1,6 +1,9 @@
 CXX := clang++
+LDFLAGS := -lpthread -Wl,--plugin-opt=O3,-O2,--discard-all,--strip-all,--gc-sections
 
-CXXFLAGS := -std=c++17 $(shell curl-config --cflags)
+include curl-cpp/linking.mk
+
+CXXFLAGS += -flto -O3 -fno-exceptions -fno-rtti
 
 SRCS=$(shell find */* -type f -name '*.cc' -not -path ./test)
 DEPS=$(SRCS:.cc=.d)
