@@ -18,7 +18,8 @@ namespace speedtest::utils {
  * If errno == ERANGE, then the integer is too big for long.
  * If errno == EINVAL, then base 10 is not supported.
  */
-auto split2long_set(std::unordered_set<long> &set, const char *str, std::size_t delimiter_sz = 1) noexcept -> 
+auto split2long_set(std::unordered_set<long> &set, const char *str, 
+                    std::size_t delimiter_sz = 1, int base = 10) noexcept -> 
     const char*;
 } /* namespace speedtest::utils */
 
