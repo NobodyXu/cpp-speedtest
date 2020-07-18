@@ -161,6 +161,11 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     counts.upload = upload_max / sizes.upload_len + upload_max % sizes.upload_len ? 1 : 0;
     counts.download = download.attribute("threadsperurl").as_uint();
 
+    threads.upload = upload.attribute("threads").as_uint();
+    threads.download = server_config.attribute("threadcount").as_uint() * 2;
+
+    ;
+
     return curl::Easy_ref_t::code::ok;
 }
 } /* namespace speedtest */
