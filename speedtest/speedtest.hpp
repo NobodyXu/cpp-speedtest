@@ -1,11 +1,18 @@
+/**
+ * The classes in this headers utilizes STL but has -fno-exceptions
+ * enabled, thus if STL is out of memory, it will raise SIGABRT.
+ */
+
 #ifndef  __cpp_speedest_speedtest_speedtest_HPP__
 # define __cpp_speedest_speedtest_speedtest_HPP__
 
 # include "../curl-cpp/curl.hpp"
 # include "../curl-cpp/curl_easy.hpp"
 
+# include <stdexcept>
 # include <utility>
 # include <vector>
+# include <unordered_set>
 # include <string>
 # include <string_view>
 
@@ -45,20 +52,39 @@ public:
  * @warning ctor and dtor of this object should be ran when
  *          only one thread is present.
  *
+ * @warning all functions is this class is not thread-safe.
+ *
  * This class has no cp/mv ctor/assignment.
  */
 class Speedtest {
+public:
+    static constexpr const auto default_useragent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                                                    "(KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36";
+
 protected:
     curl::curl_t curl;
+    const ShutdownEvent &shutdown_event;
 
     unsigned long timeout = 0;
     const char *ip_addr = nullptr;
+    bool secure = false;
+    const char *useragent = default_useragent;
 
-    const ShutdownEvent &shutdown_event;
-    bool secure;
+    std::string buffer;
 
     auto create_easy() noexcept -> 
         Ret_except<curl::Easy_t, std::bad_alloc>;
+
+    /**
+     * @param url will be dupped thus can be freed after this call.
+     *
+     *            Have to be in format protocol://... or ://...;
+     *            Protocol has to be either http or https.
+     *
+     *            Otherwise, it is UNDEFINED BEHAVIOR.
+     */
+    auto set_url(curl::Easy_ref_t easy_ref, const char *url) noexcept -> 
+        Ret_except<void, std::bad_alloc>;
 
 public:
     /**
@@ -69,21 +95,32 @@ public:
      * **If initialization of libcurl fails due to whatever reason,
      * err is called to print msg and terminate the program.**
      */
-    Speedtest(const ShutdownEvent &shutdown_event, bool secure = false) noexcept;
+    Speedtest(const ShutdownEvent &shutdown_event) noexcept;
 
     /**
-     * @param timeout in milliseconds. Set to 0 to disable;
+     * By default, secure == false
+     */
+    void set_secure(bool secure_arg) noexcept;
+    /**
+     * By default, useragent is set to default_useragent
+     */
+    void set_useragent(const char *useragent_arg) noexcept;
+    /**
+     * @param timeout in milliseconds. Set to 0 to disable (default);
      *                should be less than std::numeric_limits<long>::max().
      * @warning not thread safe
      */
     void set_timeout(unsigned long timeout_arg) noexcept;
     /**
      * @param ip_addr ipv4/ipv6 address
-     *                Set to nullptr to use whatever TCP stack see fits.
+     *                Set to nullptr to use whatever TCP stack see fits (default).
      * @warning not thread safe
      */
     void set_source_addr(const char *source_addr) noexcept;
 
+    /**
+     * @warning all functions is this class is not thread-safe.
+     */
     class Config {
     public:
         using Servers_t = std::vector<std::string>;
@@ -92,22 +129,38 @@ public:
     protected:
         Speedtest &speedtest;
 
+        std::unordered_set<long> ignoreids;
         std::vector<std::string> servers;
         std::vector<std::string_view> closest_servers;
 
     public:
+        ;
+
         /**
          * @param speedtest_arg must be kept around until Config is destroyed
          */
         Config(Speedtest &speedtest_arg) noexcept;
 
-        auto get_config() noexcept -> curl::Easy_ref_t::perform_ret_t;
+        class xml_parse_error: public std::runtime_error {
+        public:
+            const char *error;
 
-        auto get_servers(Servers_t &servers, Servers_t &exclude) noexcept -> curl::Easy_ref_t::perform_ret_t;
+            xml_parse_error(const char *error_msg);
+            xml_parse_error(const xml_parse_error&) = default;
+
+            const char* what() const noexcept;
+        };
+        using Ret = glue_ret_except_t<curl::Easy_ref_t::perform_ret_t, 
+                                               Ret_except<void, xml_parse_error>>;
+
+        auto get_config() noexcept -> Ret;
+
+        auto get_servers(Servers_t &servers, Servers_t &exclude) noexcept -> Ret;
 
         auto get_closest_servers(unsigned long limit = 5) const noexcept -> const Servers_view_t&;
 
-        auto get_best_server(const Servers_view_t &servers_arg) noexcept;
+        auto get_best_server(const Servers_view_t &servers_arg) noexcept ->
+            curl::Easy_ref_t::perform_ret_t;
     };
 
     ;
