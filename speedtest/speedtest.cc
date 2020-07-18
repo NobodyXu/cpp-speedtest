@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cerrno>
 #include <memory>
+#include <utlity>
 
 // Feature tuning
 #define PUGIXML_HEADER_ONLY
@@ -111,10 +112,13 @@ const char* Speedtest::Config::xml_parse_error::what() const noexcept
 
 auto Speedtest::Config::get_config() noexcept -> Ret
 {
-    auto easy = speedtest.create_easy();
-    if (easy.has_exception_set())
-        return {easy};
-    auto easy_ref = curl::Easy_ref_t{easy.get_return_value().get()};
+    if (!easy) {
+        auto result = speedtest.create_easy();
+        if (result.has_exception_set())
+            return {result};
+        easy = std::move(result).get_return_value();
+    }
+    auto easy_ref = curl::Easy_ref_t{easy.get()};
 
     speedtest.set_url(easy_ref, "://www.speedtest.net/speedtest-config.php");
 
@@ -168,6 +172,25 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     length.download = download.attribute("testlength").as_uint();
 
     this->upload_max = counts.upload * sizes.upload_len;
+
+    return curl::Easy_ref_t::code::ok;
+}
+
+auto Speedtest::Config::get_servers(const std::vector<int> &servers_arg, 
+                                    const std::vector<int> &exclude, 
+                                    const char * const urls[]) noexcept -> Ret
+{
+    if (!easy) {
+        auto result = speedtest.create_easy();
+        if (result.has_exception_set())
+            return {result};
+        easy = std::move(result).get_return_value();
+    }
+    auto easy_ref = curl::Easy_ref_t{easy.get()};
+
+    servers.clear();
+
+    ;
 
     return curl::Easy_ref_t::code::ok;
 }

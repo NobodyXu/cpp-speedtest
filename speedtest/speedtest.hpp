@@ -223,13 +223,24 @@ public:
                                       Ret_except<void, xml_parse_error>>;
 
         auto get_config() noexcept -> Ret;
+
+        static constexpr const char *server_list_urls[] = {
+            "://www.speedtest.net/speedtest-servers-static.php",
+            "://c.speedtest.net/speedtest-servers-static.php",
+            "://www.speedtest.net/speedtest-servers.php",
+            "://c.speedtest.net/speedtest-servers.php",
+            nullptr
+        };
+
         /**
          * @param servers servers to be used.
          * @param exclude servers to be excluded.
+         * @param urls the last url must be nullptr, to signal the end of array.
          *
          * Get list of servers from preconfigured site.
          */
-        auto get_servers(const std::vector<int> &servers, const std::vector<int> &exclude) noexcept -> Ret;
+        auto get_servers(const std::vector<int> &servers, const std::vector<int> &exclude, 
+                         const char * const urls[] = server_list_urls) noexcept -> Ret;
 
         auto get_closest_servers(unsigned long limit = 5) const noexcept -> const Servers_view_t&;
 
