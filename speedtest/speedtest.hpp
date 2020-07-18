@@ -224,10 +224,15 @@ public:
 
         auto get_config() noexcept -> Ret;
         /**
+         * @param exclude servers to be excluded.
+         *
          * Get list of servers from preconfigured site.
          * You can skip this by manually adding servers to Config::servers.
+         *
+         * You can also overwrite the initialize set of server being tested by
+         * this methods by overwritng Config::severs.
          */
-        auto get_servers(Servers_t &servers, Servers_t &exclude) noexcept -> Ret;
+        auto get_servers(Servers_t &exclude) noexcept -> Ret;
 
         auto get_closest_servers(unsigned long limit = 5) const noexcept -> const Servers_view_t&;
 
