@@ -179,6 +179,8 @@ public:
             unsigned download;
         } length;
 
+        unsigned upload_max;
+
         /**
          * @param speedtest_arg must be kept around until Config is destroyed
          */

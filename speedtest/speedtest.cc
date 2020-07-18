@@ -167,6 +167,8 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     length.upload = upload.attribute("testlength").as_uint();
     length.download = download.attribute("testlength").as_uint();
 
+    this->upload_max = counts.upload * sizes.upload_len;
+
     return curl::Easy_ref_t::code::ok;
 }
 } /* namespace speedtest */
