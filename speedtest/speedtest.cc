@@ -142,7 +142,7 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     auto upload        = settings.child("upload");
     auto client        = settings.child("client");
 
-    utils::split2long_set(ignoreids, server_config.attribute("ignoreids").value());
+    utils::split2long_set(ignore_servers, server_config.attribute("ignoreids").value());
 
     unsigned upload_ratio         = upload.attribute("ratio").as_uint();
     unsigned upload_maxchunkcount = upload.attribute("maxchunkcount").as_uint();

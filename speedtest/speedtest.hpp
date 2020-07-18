@@ -129,11 +129,20 @@ public:
     protected:
         Speedtest &speedtest;
 
-        std::unordered_set<long> ignoreids;
-        std::vector<std::string> servers;
-        std::vector<std::string_view> closest_servers;
-
     public:
+        /**
+         * Id of servers ignored
+         */
+        std::unordered_set<long> ignore_servers;
+        /**
+         * url of servers.
+         * Can be either http://..., https://... or ://...
+         */
+        std::vector<std::string> servers;
+        /**
+         * Pointers of servers.
+         */
+        std::vector<std::string_view> closest_servers;
         ;
 
         /**
@@ -154,12 +163,15 @@ public:
                                                Ret_except<void, xml_parse_error>>;
 
         auto get_config() noexcept -> Ret;
-
+        /**
+         * Get list of servers from preconfigured site.
+         * You can skip this by manually adding servers to Config::servers.
+         */
         auto get_servers(Servers_t &servers, Servers_t &exclude) noexcept -> Ret;
 
         auto get_closest_servers(unsigned long limit = 5) const noexcept -> const Servers_view_t&;
 
-        auto get_best_server(const Servers_view_t &servers_arg) noexcept ->
+        auto get_best_server() noexcept ->
             curl::Easy_ref_t::perform_ret_t;
     };
 
