@@ -158,6 +158,9 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     sizes.upload_len = 7 - start;
     std::uninitialized_copy(sizes.up_sizes.begin() + start, sizes.up_sizes.end(), sizes.upload);
 
+    counts.upload = upload_max / sizes.upload_len + upload_max % sizes.upload_len ? 1 : 0;
+    counts.download = download.attribute("threadsperurl").as_uint();
+
     return curl::Easy_ref_t::code::ok;
 }
 } /* namespace speedtest */

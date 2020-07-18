@@ -162,7 +162,10 @@ public:
             };
         } sizes;
 
-        ;
+        struct Counts {
+            unsigned upload;
+            unsigned download;
+        } counts;
 
         /**
          * @param speedtest_arg must be kept around until Config is destroyed
