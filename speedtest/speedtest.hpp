@@ -181,6 +181,30 @@ public:
 
         unsigned upload_max;
 
+        struct Client {
+            /**
+             * Information retrieved from [here][1]
+             *
+             * [1]: https://stackoverflow.com/questions/166132/maximum-length-of-the-textual-representation-of-an-ipv6-address
+             */
+            char ip[46];
+
+            struct Geolocation {
+                float lat;
+                float lon;
+
+                char country[11];
+            } geolocation;
+
+            bool is_loggedin;
+
+            char isp[21];
+            float isp_rating;
+            float rating;
+            float isp_dlavg;
+            float isp_ulavg;
+        } client;
+
         /**
          * @param speedtest_arg must be kept around until Config is destroyed
          */
