@@ -224,14 +224,12 @@ public:
 
         auto get_config() noexcept -> Ret;
         /**
+         * @param servers servers to be used.
          * @param exclude servers to be excluded.
          *
          * Get list of servers from preconfigured site.
-         * You can skip this by manually adding servers to Config::servers.
-         *
-         * You can also add more server by adding them to Config::severs.
          */
-        auto get_servers(Servers_t &exclude) noexcept -> Ret;
+        auto get_servers(const std::vector<int> &servers, const std::vector<int> &exclude) noexcept -> Ret;
 
         auto get_closest_servers(unsigned long limit = 5) const noexcept -> const Servers_view_t&;
 
