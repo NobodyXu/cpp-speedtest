@@ -229,8 +229,7 @@ public:
          * Get list of servers from preconfigured site.
          * You can skip this by manually adding servers to Config::servers.
          *
-         * You can also overwrite the initialize set of server being tested by
-         * this methods by overwritng Config::severs.
+         * You can also add more server by adding them to Config::severs.
          */
         auto get_servers(Servers_t &exclude) noexcept -> Ret;
 
