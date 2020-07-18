@@ -129,6 +129,7 @@ public:
 
     protected:
         Speedtest &speedtest;
+        curl::Easy_t easy;
 
     public:
         /**

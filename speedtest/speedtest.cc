@@ -5,7 +5,7 @@
 #include <cstring>
 #include <cerrno>
 #include <memory>
-#include <utlity>
+#include <utility>
 
 // Feature tuning
 #define PUGIXML_HEADER_ONLY
