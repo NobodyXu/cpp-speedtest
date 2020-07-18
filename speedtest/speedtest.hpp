@@ -132,10 +132,6 @@ public:
 
     public:
         /**
-         * Id of servers ignored
-         */
-        std::unordered_set<long> ignore_servers;
-        /**
          * url of servers.
          * Can be either http://..., https://... or ://...
          */
@@ -148,6 +144,12 @@ public:
         /*
          * Configurations retrieved
          */
+
+        /**
+         * Id of servers ignored
+         */
+        std::unordered_set<long> ignore_servers;
+
         struct Sizes {
             static constexpr const std::array up_sizes{
                 32768, 65536, 131072, 262144, 524288, 1048576, 7340032
