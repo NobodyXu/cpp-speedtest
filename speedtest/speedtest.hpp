@@ -179,7 +179,7 @@ public:
             const char* what() const noexcept;
         };
         using Ret = glue_ret_except_t<curl::Easy_ref_t::perform_ret_t, 
-                                               Ret_except<void, xml_parse_error>>;
+                                      Ret_except<void, xml_parse_error>>;
 
         auto get_config() noexcept -> Ret;
         /**

@@ -3,6 +3,7 @@
 #include "../utils/split2int.hpp"
 
 #include <cstring>
+#include <cerrno>
 #include <memory>
 
 // Feature tuning
@@ -141,7 +142,14 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     auto upload        = settings.child("upload");
     auto client        = settings.child("client");
 
-    utils::split2long_set(ignore_servers, server_config.attribute("ignoreids").value());
+    if (utils::split2long_set(ignore_servers, server_config.attribute("ignoreids").value())[0] != '\0') {
+        if (errno == 0)
+            return {xml_parse_error{"Invalid integer in xpath settings/server-config@ignoreids"}};
+        else if (errno == ERANGE)
+            return {xml_parse_error{"Integer too big in xpath settings/server-config@ignoreids"}};
+        else if (errno == EINVAL)
+            return {xml_parse_error{"Your libc runtime doesn't support strtol of base 10 integer"}};
+    }
 
     unsigned upload_ratio = upload.attribute("ratio").as_uint();
     unsigned upload_max   = upload.attribute("maxchunkcount").as_uint();
