@@ -3,8 +3,7 @@
 #include "../utils/split2int.hpp"
 
 #include <cstring>
-#include <cstdio>
-#include <cerrno>
+#include <memory>
 
 // Feature tuning
 #define PUGIXML_HEADER_ONLY
@@ -144,10 +143,12 @@ auto Speedtest::Config::get_config() noexcept -> Ret
 
     utils::split2long_set(ignore_servers, server_config.attribute("ignoreids").value());
 
-    unsigned upload_ratio         = upload.attribute("ratio").as_uint();
-    unsigned upload_maxchunkcount = upload.attribute("maxchunkcount").as_uint();
-    static constexpr const unsigned up_sizes[] = {32768, 65536, 131072, 262144, 524288, 1048576, 7340032};
-    ;
+    unsigned upload_ratio = upload.attribute("ratio").as_uint();
+    unsigned upload_max   = upload.attribute("maxchunkcount").as_uint();
+
+    auto start = upload_ratio - 1;
+    sizes.upload_len = 7 - start;
+    std::uninitialized_copy(sizes.up_sizes.begin() + start, sizes.up_sizes.end(), sizes.upload);
 
     return curl::Easy_ref_t::code::ok;
 }

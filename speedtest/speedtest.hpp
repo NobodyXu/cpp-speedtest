@@ -12,6 +12,7 @@
 # include <stdexcept>
 # include <utility>
 # include <vector>
+# include <array>
 # include <unordered_set>
 # include <string>
 # include <string_view>
@@ -143,6 +144,24 @@ public:
          * Pointers of servers.
          */
         std::vector<std::string_view> closest_servers;
+
+        /*
+         * Configurations retrieved
+         */
+        struct Sizes {
+            static constexpr const std::array up_sizes{
+                32768, 65536, 131072, 262144, 524288, 1048576, 7340032
+            };
+
+            unsigned char upload_len = 0;
+            unsigned upload[7];
+
+            unsigned download[10] = {
+                350, 500, 750, 1000, 1500, 2000, 2500,
+                3000, 3500, 4000,
+            };
+        } sizes;
+
         ;
 
         /**
