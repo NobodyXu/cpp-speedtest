@@ -172,6 +172,11 @@ public:
             unsigned download;
         } threads;
 
+        struct Length {
+            unsigned upload;
+            unsigned download;
+        } length;
+
         /**
          * @param speedtest_arg must be kept around until Config is destroyed
          */

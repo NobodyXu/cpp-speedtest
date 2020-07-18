@@ -164,7 +164,8 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     threads.upload = upload.attribute("threads").as_uint();
     threads.download = server_config.attribute("threadcount").as_uint() * 2;
 
-    ;
+    length.upload = upload.attribute("testlength").as_uint();
+    length.download = download.attribute("testlength").as_uint();
 
     return curl::Easy_ref_t::code::ok;
 }
