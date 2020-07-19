@@ -10,7 +10,6 @@
 # include "../curl-cpp/curl_easy.hpp"
 # include "../curl-cpp/return-exception/ret-exception.hpp"
 
-# include <cstdint>
 # include <stdexcept>
 # include <utility>
 # include <memory>
@@ -259,11 +258,12 @@ public:
             std::size_t url_parsed = 0;
 
             struct Server {
-                static constexpr const std::uintptr_t mask = -1;
+                int common_format;
 
+                static constexpr const std::uintptr_t mask = -1;
                 /**
-                 * If (url.get() & mask) == 0, then url contains hostname:port/path;
-                 * If (url.get() & mask) == 1, then url contains hostname only,
+                 * If url.get() & (1 << == 0, then url contains hostname:port/path;
+                 * If common_format == 1, then url contains hostname only,
                  * and the port is predefined to be 8080, path predefined to be 
                  * "/speedtest/upload.php"
                  */
