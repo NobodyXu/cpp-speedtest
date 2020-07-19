@@ -138,6 +138,8 @@ public:
         curl::Easy_t easy;
 
     public:
+        using server_id = long;
+
         /**
          * url of servers.
          * Can be either http://..., https://... or ://...
@@ -155,7 +157,7 @@ public:
         /**
          * Id of servers ignored
          */
-        std::unordered_set<long> ignore_servers;
+        std::unordered_set<server_id> ignore_servers;
 
         struct Sizes {
             static constexpr const std::array up_sizes{
@@ -257,8 +259,8 @@ public:
          *
          * Get list of servers from preconfigured site.
          */
-        auto get_servers(const std::unordered_set<int> &servers, 
-                         const std::unordered_set<int> &exclude, 
+        auto get_servers(const std::unordered_set<server_id> &servers, 
+                         const std::unordered_set<server_id> &exclude, 
                          const char * const urls[] = server_list_urls) noexcept -> 
             Ret_except<std::size_t, std::bad_alloc>;
 
