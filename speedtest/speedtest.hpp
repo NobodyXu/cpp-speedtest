@@ -282,7 +282,7 @@ public:
              * Small String Optimization.
              */
             std::unordered_set<std::string> server_names;
-            std::unordered_set<Geolocation, typename Geolocation::Hash> server_geolocations;
+            std::unordered_set<std::unique_ptr<Geolocation>, typename Geolocation::Hash> server_geolocations;
             std::unordered_set<std::string> server_sponsors;
 
             std::unordered_map<Server_id, Server> servers;
