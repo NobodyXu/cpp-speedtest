@@ -12,6 +12,7 @@
 
 # include <stdexcept>
 # include <utility>
+# include <memory>
 # include <vector>
 # include <array>
 # include <unordered_set>
@@ -138,7 +139,30 @@ public:
         curl::Easy_t easy;
 
     public:
+        struct Geolocation {
+            float lat;
+            float lon;
+
+            char country[11];
+        } geolocation;
+
         using server_id = long;
+
+        struct Server {
+            std::unique_ptr<char[]> url;
+
+            const char *name;
+            const Geolocation *geolocation;
+            const char *sponsor;
+        };
+
+        /**
+         * (lat, lon, country), name, cc, spnsor are often duplicated,
+         * using unordered_set helps to deduplicate them.
+         */
+        std::unordered_set<std::string> server_names;
+        std::unordered_set<Geolocation> server_geolocations;
+        std::unordered_set<std::string> server_sponsors;
 
         /**
          * url of servers.
@@ -198,12 +222,7 @@ public:
              */
             char ip[46];
 
-            struct Geolocation {
-                float lat;
-                float lon;
-
-                char country[11];
-            } geolocation;
+            Geolocation geolocation;
 
             bool is_loggedin;
 
