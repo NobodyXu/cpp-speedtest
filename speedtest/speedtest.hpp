@@ -286,7 +286,11 @@ public:
 
             std::unordered_map<Server_id, Server> servers;
 
-            ;
+            /**
+             * shortest_distance is the distance between closest_servers
+             * and current location.
+             */
+            double shortest_distance;
             /**
              * Pointers of servers.
              */
