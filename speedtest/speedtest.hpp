@@ -144,7 +144,7 @@ public:
             float lon;
 
             char country[11];
-        } geolocation;
+        };
 
         using server_id = long;
 
