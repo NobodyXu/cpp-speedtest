@@ -49,28 +49,29 @@ void Speedtest::set_source_addr(const char *source_addr) noexcept
     ip_addr = source_addr;
 }
 
-auto Speedtest::create_easy() noexcept -> 
-    Ret_except<curl::Easy_t, std::bad_alloc>
+auto Speedtest::create_easy() noexcept -> curl::Easy_t
 {
     auto easy = curl.create_easy();
     if (!easy)
-        return {std::bad_alloc{}};
+        return {};
     auto easy_ref = curl::Easy_ref_t{easy.get()};
 
     easy_ref.set_timeout(timeout);
 
     {
         auto result = easy_ref.set_interface(ip_addr);
+        result.Catch([](auto&&) noexcept {});
         if (result.has_exception_set())
-            return {result};
+            return {};
     }
 
     easy_ref.set_follow_location(-1);
 
     {
         auto result = easy_ref.set_useragent(useragent);
+        result.Catch([](auto&&) noexcept {});
         if (result.has_exception_set())
-            return {result};
+            return {};
     }
 
     return {std::move(easy)};
@@ -131,10 +132,9 @@ const char* Speedtest::Config::xml_parse_error::what() const noexcept
 auto Speedtest::Config::get_config() noexcept -> Ret
 {
     if (!easy) {
-        auto result = speedtest.create_easy();
-        if (result.has_exception_set())
-            return {result};
-        easy = std::move(result).get_return_value();
+        easy = speedtest.create_easy();
+        if (!easy)
+            return {std::bad_alloc{}};
     }
     auto easy_ref = curl::Easy_ref_t{easy.get()};
 

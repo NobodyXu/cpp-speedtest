@@ -8,6 +8,7 @@
 
 # include "../curl-cpp/curl.hpp"
 # include "../curl-cpp/curl_easy.hpp"
+# include "../curl-cpp/return-exception/ret-exception.hpp"
 
 # include <stdexcept>
 # include <utility>
@@ -73,8 +74,7 @@ protected:
 
     std::string buffer;
 
-    auto create_easy() noexcept -> 
-        Ret_except<curl::Easy_t, std::bad_alloc>;
+    auto create_easy() noexcept -> curl::Easy_t;
 
     /**
      * @param url will be dupped thus can be freed after this call.
