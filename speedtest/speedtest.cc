@@ -291,6 +291,7 @@ auto Speedtest::Config::get_servers(const std::vector<int> &servers_arg,
                     return {result};
 
                 result.Catch([](const auto&) noexcept {});
+                continue;
             }
         }
 
