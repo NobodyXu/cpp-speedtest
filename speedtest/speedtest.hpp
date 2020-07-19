@@ -164,11 +164,8 @@ public:
         std::unordered_set<Geolocation> server_geolocations;
         std::unordered_set<std::string> server_sponsors;
 
-        /**
-         * url of servers.
-         * Can be either http://..., https://... or ://...
-         */
-        std::vector<std::string> servers;
+        std::unordered_map<server_id, Server> servers;
+
         /**
          * Pointers of servers.
          */
