@@ -274,6 +274,7 @@ auto Speedtest::Config::get_servers(const std::vector<int> &servers_arg,
                 return {result};
         }
 
+        response.clear();
         easy_ref.set_readall_writeback(response);
 
         {
