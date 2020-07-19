@@ -244,7 +244,7 @@ auto Speedtest::Config::get_config() noexcept -> Ret
 auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers_arg, 
                                     const std::unordered_set<Server_id> &exclude, 
                                     const char * const urls[]) noexcept ->
-    Ret_except<std::size_t, std::bad_alloc>
+    Ret_except<Candidate_servers, std::bad_alloc>
 {
     if (!easy) {
         easy = speedtest.create_easy();
@@ -277,7 +277,7 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
     // Would be used to reset built_url.
     const auto prefix_size = built_url.size();
 
-    std::size_t cnt = 0;
+    Candidate_servers candidates;
     std::string response;
     /**
      * On my machine, the maximum response I get from server_list_urls
@@ -329,13 +329,15 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                 continue;
             if (ignore_servers.find(server_id) != ignore_servers.end())
                 continue;
-            if (servers.find(server_id) != servers.end())
+            if (candidates.servers.find(server_id) != candidates.servers.end())
                 continue;
 
             ;
         }
+
+        ++candidates.url_parsed;
     }
 
-    return cnt;
+    return candidates;
 }
 } /* namespace speedtest */

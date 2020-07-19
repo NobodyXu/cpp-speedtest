@@ -139,6 +139,12 @@ public:
         curl::Easy_t easy;
 
     public:
+        using Server_id = long;
+
+        /*
+         * Configurations retrieved
+         */
+
         struct Geolocation {
             float lat;
             float lon;
@@ -154,34 +160,6 @@ public:
             friend bool operator == (const Geolocation &x, const Geolocation &y) noexcept;
         };
 
-        using Server_id = long;
-
-        struct Server {
-            std::unique_ptr<char[]> url;
-
-            const char *name;
-            const Geolocation *geolocation;
-            const char *sponsor;
-        };
-
-        /**
-         * (lat, lon, country), name, cc, spnsor are often duplicated,
-         * using unordered_set helps to deduplicate them.
-         */
-        std::unordered_set<std::string> server_names;
-        std::unordered_set<Geolocation, typename Geolocation::Hash> server_geolocations;
-        std::unordered_set<std::string> server_sponsors;
-
-        std::unordered_map<Server_id, Server> servers;
-
-        /**
-         * Pointers of servers.
-         */
-        std::vector<Server*> closest_servers;
-
-        /*
-         * Configurations retrieved
-         */
 
         /**
          * Id of servers ignored
@@ -273,6 +251,39 @@ public:
             nullptr
         };
 
+        struct Candidate_servers {
+            /**
+             * how many urls is parsed by get_servers
+             */
+            std::size_t url_parsed = 0;
+
+            struct Server {
+                /**
+                 * format: hostname:port/path
+                 */
+                std::unique_ptr<char[]> url;
+
+                const char *name;
+                const Geolocation *geolocation;
+                const char *sponsor;
+            };
+
+            /**
+             * (lat, lon, country), name, cc, spnsor are often duplicated,
+             * using unordered_set helps to deduplicate them.
+             */
+            std::unordered_set<std::string> server_names;
+            std::unordered_set<Geolocation, typename Geolocation::Hash> server_geolocations;
+            std::unordered_set<std::string> server_sponsors;
+
+            std::unordered_map<Server_id, Server> servers;
+
+            /**
+             * Pointers of servers.
+             */
+            std::vector<Server*> closest_servers;
+        };
+
         /**
          * @param servers_arg servers to be used.
          * @param exclude servers to be excluded.
@@ -286,7 +297,7 @@ public:
         auto get_servers(const std::unordered_set<Server_id> &servers, 
                          const std::unordered_set<Server_id> &exclude, 
                          const char * const urls[] = server_list_urls) noexcept -> 
-            Ret_except<std::size_t, std::bad_alloc>;
+            Ret_except<Candidate_servers, std::bad_alloc>;
 
         auto get_closest_servers(unsigned long limit = 5) const noexcept -> const Servers_view_t&;
 
