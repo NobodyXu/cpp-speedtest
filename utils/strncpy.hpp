@@ -10,6 +10,12 @@ namespace speedtest::utils {
  * The dest will always be null-terminated.
  */
 void strncpy(char * dest, std::size_t dest_sz, const char * src) noexcept;
+
+template <std::size_t dest_sz>
+auto strncpy(char (&dest)[dest_sz], const char *src) noexcept
+{
+    return strncpy(dest, dest_sz, src);
+}
 } /* namespace speedtest::utils */
 
 #endif
