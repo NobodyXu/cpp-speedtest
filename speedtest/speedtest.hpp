@@ -276,6 +276,9 @@ public:
             /**
              * (lat, lon, country), name, cc, spnsor are often duplicated,
              * using unordered_set helps to deduplicate them.
+             *
+             * std::string is used instead of std::unique_ptr<char[]> due to their
+             * Small String Optimization.
              */
             std::unordered_set<std::string> server_names;
             std::unordered_set<Geolocation, typename Geolocation::Hash> server_geolocations;
