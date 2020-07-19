@@ -227,8 +227,8 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     return curl::Easy_ref_t::code::ok;
 }
 
-auto Speedtest::Config::get_servers(const std::vector<int> &servers_arg, 
-                                    const std::vector<int> &exclude, 
+auto Speedtest::Config::get_servers(const std::unordered_set<int> &servers_arg, 
+                                    const std::unordered_set<int> &exclude, 
                                     const char * const urls[]) noexcept ->
     Ret_except<std::size_t, std::bad_alloc>
 {

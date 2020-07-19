@@ -257,8 +257,8 @@ public:
          *
          * Get list of servers from preconfigured site.
          */
-        auto get_servers(const std::vector<int> &servers, 
-                         const std::vector<int> &exclude, 
+        auto get_servers(const std::unordered_set<int> &servers, 
+                         const std::unordered_set<int> &exclude, 
                          const char * const urls[] = server_list_urls) noexcept -> 
             Ret_except<std::size_t, std::bad_alloc>;
 
