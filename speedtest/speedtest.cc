@@ -245,7 +245,7 @@ auto Speedtest::Config::get_servers(const std::vector<int> &servers_arg,
      * protocol takes 5 or 4 bytes, depending on whether it is http or https,
      * and the query takes at most sizeof(query).
      */
-    built_url.reserve(4 + std::size_t(speedtest.secure) + 40 + sizeof(query));
+    built_url.reserve(4 + std::size_t(speedtest.secure) + 49 + sizeof(query));
 
     built_url.append("http");
     if (speedtest.secure)
