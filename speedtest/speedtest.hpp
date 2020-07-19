@@ -230,8 +230,12 @@ public:
 
             const char* what() const noexcept;
         };
+        class Error_Response_code: public Exception {
+        public:
+            using Exception::Exception;
+        };
         using Ret = glue_ret_except_t<curl::Easy_ref_t::perform_ret_t, 
-                                      Ret_except<void, xml_parse_error>>;
+                                      Ret_except<void, xml_parse_error, Error_Response_code>>;
 
         auto get_config() noexcept -> Ret;
 

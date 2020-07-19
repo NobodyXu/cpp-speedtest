@@ -158,6 +158,13 @@ auto Speedtest::Config::get_config() noexcept -> Ret
             return {result};
     }
 
+    auto response_code = easy_ref.get_response_code();
+    if (response_code != 200) {
+        char buffer[64];
+        std::snprintf(buffer, 64, "Get response code %ld", response_code);
+        return {Error_Response_code{buffer}};
+    }
+
     pugi::xml_document doc;
     {
         // The following line requies CharT* std::string::data() noexcept; (Since C++17)
