@@ -3,8 +3,10 @@
 #include "../utils/split2int.hpp"
 #include "../utils/strncpy.hpp"
 
-#include <cstring>
 #include <cerrno>
+#include <cassert>
+#include <cstring>
+#include <cstdio>
 #include <memory>
 #include <utility>
 
@@ -220,20 +222,87 @@ auto Speedtest::Config::get_config() noexcept -> Ret
 
 auto Speedtest::Config::get_servers(const std::vector<int> &servers_arg, 
                                     const std::vector<int> &exclude, 
-                                    const char * const urls[]) noexcept -> Ret
+                                    const char * const urls[]) noexcept ->
+    Ret_except<std::size_t, std::bad_alloc>
 {
     if (!easy) {
-        auto result = speedtest.create_easy();
-        if (result.has_exception_set())
-            return {result};
-        easy = std::move(result).get_return_value();
+        easy = speedtest.create_easy();
+        if (!easy)
+            return {std::bad_alloc{}};
     }
     auto easy_ref = curl::Easy_ref_t{easy.get()};
 
-    servers.clear();
+    // Built query
+    // ?threads=number
+    char query[9 + 10 + 1];
+    auto query_sz = std::snprintf(query, sizeof(query), "?threads=%u", threads.download);
+    assert(query_sz > 0);
+    assert(query_sz < sizeof(query)); // ret value excludes null byte
 
-    ;
+    std::string built_url;
+    /**
+     * The longest element of server_list_urls is 49-byte long, 
+     * protocol takes 5 or 4 bytes, depending on whether it is http or https,
+     * and the query takes at most sizeof(query).
+     */
+    built_url.reserve(4 + std::size_t(speedtest.secure) + 40 + sizeof(query));
 
-    return curl::Easy_ref_t::code::ok;
+    built_url.append("http");
+    if (speedtest.secure)
+        built_url += 's';
+    built_url.append("://");
+
+    // size of protocol prefix.
+    // Would be used to reset built_url.
+    const auto prefix_size = built_url.size();
+
+    std::size_t cnt = 0;
+    std::string response;
+    /**
+     * On my machine, the maximum response I get from server_list_urls
+     * with '?thread=4' is 221658, thus reserve 222000.
+     */
+    response.reserve(222000);
+
+    for (std::size_t i = 0; urls[i] != nullptr; ++i) {
+        built_url.resize(prefix_size);
+        built_url.append(urls[i]).append(query, query_sz);
+
+        {
+            auto result = easy_ref.set_url(built_url.c_str());
+            if (result.has_exception_set())
+                return {result};
+        }
+
+        easy_ref.set_readall_writeback(response);
+
+        {
+            auto result = easy_ref.perform();
+            if (result.has_exception_set()) {
+                bool is_oom = result.has_exception_type<std::bad_alloc>();
+                result.Catch([](const auto&) noexcept
+                {
+                    // Ignore and continue
+                });
+
+                if (is_oom)
+                    return {std::bad_alloc{}};
+                else
+                    continue;
+            }
+        }
+
+        pugi::xml_document doc;
+        {
+            // The following line requies CharT* data() noexcept; (Since C++17)
+            auto result = doc.load_buffer_inplace(response.data(), response.size());
+            if (!result)
+                continue;
+        }
+
+        ;
+    }
+
+    return cnt;
 }
 } /* namespace speedtest */

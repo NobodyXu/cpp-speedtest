@@ -245,10 +245,14 @@ public:
          * @param urls the last url must be nullptr, to signal the end of array.
          *             <br>Should formatted like server_list_urls.
          *
+         * @return number of urls read in successfully.
+         *
          * Get list of servers from preconfigured site.
          */
-        auto get_servers(const std::vector<int> &servers, const std::vector<int> &exclude, 
-                         const char * const urls[] = server_list_urls) noexcept -> Ret;
+        auto get_servers(const std::vector<int> &servers, 
+                         const std::vector<int> &exclude, 
+                         const char * const urls[] = server_list_urls) noexcept -> 
+            Ret_except<std::size_t, std::bad_alloc>;
 
         auto get_closest_servers(unsigned long limit = 5) const noexcept -> const Servers_view_t&;
 
