@@ -87,6 +87,14 @@ protected:
     auto set_url(curl::Easy_ref_t easy_ref, const char *url) noexcept -> 
         Ret_except<void, std::bad_alloc>;
 
+    /**
+     * @param url will be dupped thus can be freed after this call.
+     *            <br>Have to be in format https://...
+     *            <br>Otherwise, it is UNDEFINED BEHAVIOR.
+     */
+    auto set_url(curl::Easy_ref_t easy_ref, std::string &url) const noexcept -> 
+        Ret_except<void, std::bad_alloc>;
+
 public:
     /**
      * If libcurl is already initialized, but SSL is not initialized

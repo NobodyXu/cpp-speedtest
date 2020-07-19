@@ -96,6 +96,23 @@ auto Speedtest::set_url(curl::Easy_ref_t easy_ref, const char *url) noexcept ->
 
     return {};
 }
+auto Speedtest::set_url(curl::Easy_ref_t easy_ref, std::string &url) const noexcept -> 
+    Ret_except<void, std::bad_alloc>
+{
+    const char *url_str = url.c_str();
+
+    if (!secure) {
+        // The following line requies CharT* data() noexcept; (Since C++17)
+        std::memcpy(url.data() + 1, "http", 4);
+        ++url_str;
+    }
+
+    auto result = easy_ref.set_url(url_str);
+    if (result.has_exception_set())
+        return {result};
+
+    return {};
+}
 
 Speedtest::Config::Config(Speedtest &speedtest_arg) noexcept:
     speedtest{speedtest_arg}
