@@ -143,6 +143,13 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     std::string response;
     easy_ref.set_readall_writeback(response);
 
+    /**
+     * On my own network and machine, the result of
+     * https://www.speedtest.net/speedtest-config.php takes 13633 bytes, so
+     * reserving 13700 bytes is quite reasonable.
+     */
+    response.reserve(13700);
+
     {
         auto result = easy_ref.perform();
         if (result.has_exception_set())
