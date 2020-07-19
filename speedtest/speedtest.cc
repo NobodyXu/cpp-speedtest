@@ -160,7 +160,7 @@ auto Speedtest::Config::get_config() noexcept -> Ret
 
     pugi::xml_document doc;
     {
-        // The following line requies CharT* data() noexcept; (Since C++17)
+        // The following line requies CharT* std::string::data() noexcept; (Since C++17)
         auto result = doc.load_buffer_inplace(response.data(), response.size());
         if (!result)
             return {xml_parse_error{result.description()}};
@@ -288,7 +288,7 @@ auto Speedtest::Config::get_servers(const std::vector<int> &servers_arg,
 
         pugi::xml_document doc;
         {
-            // The following line requies CharT* data() noexcept; (Since C++17)
+            // The following line requies CharT* std::string::data() noexcept; (Since C++17)
             auto result = doc.load_buffer_inplace(response.data(), response.size());
             if (!result)
                 continue;
