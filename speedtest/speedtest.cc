@@ -315,6 +315,8 @@ auto Speedtest::Config::get_servers(const std::unordered_set<server_id> &servers
                 continue;
             if (ignore_servers.find(server_id) != ignore_servers.end())
                 continue;
+            if (servers.find(server_id) != servers.end())
+                continue;
 
             ;
         }
