@@ -306,7 +306,18 @@ auto Speedtest::Config::get_servers(const std::unordered_set<server_id> &servers
                 continue;
         }
 
-        ;
+        auto servers_xml = doc.child("settings").child("servers");
+        for (auto &&server: servers_xml.children("server")) {
+            auto server_id = server.attribute("id").as_llong();
+            if (servers_arg.find(server_id) == servers_arg.end())
+                continue;
+            if (exclude.find(server_id) != exclude.end())
+                continue;
+            if (ignore_servers.find(server_id) != ignore_servers.end())
+                continue;
+
+            ;
+        }
     }
 
     return cnt;
