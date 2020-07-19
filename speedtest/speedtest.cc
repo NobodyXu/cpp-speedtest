@@ -1,6 +1,7 @@
 #include "speedtest.hpp"
 #include "../curl-cpp/curl_easy.hpp"
 #include "../utils/split2int.hpp"
+#include "../utils/strncpy.hpp"
 
 #include <cstring>
 #include <cerrno>
@@ -161,7 +162,7 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     auto server_config = settings.child("server-config");
     auto download      = settings.child("download");
     auto upload        = settings.child("upload");
-    auto client        = settings.child("client");
+    auto client_xml    = settings.child("client");
 
     if (utils::split2long_set(ignore_servers, server_config.attribute("ignoreids").value())[0] != '\0') {
         if (errno == 0)
@@ -189,6 +190,23 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     length.download = download.attribute("testlength").as_uint();
 
     this->upload_max = counts.upload * sizes.upload_len;
+
+    // Get client info
+    utils::strncpy(client.ip, 46, client_xml.attribute("ip").value());
+
+    client.geolocation.lat = client_xml.attribute("lat").as_float();
+    client.geolocation.lon = client_xml.attribute("lon").as_float();
+
+    utils::strncpy(client.geolocation.country, 11, client_xml.attribute("country").value());
+
+    client.is_loggedin = client_xml.attribute("loggedin").as_bool();
+
+    utils::strncpy(client.isp, 21, client_xml.attribute("isp").value());
+
+    client.isp_rating = client_xml.attribute("isprating").as_float();
+    client.rating     = client_xml.attribute("rating").as_float();
+    client.isp_dlavg  = client_xml.attribute("ispdlavg").as_float();
+    client.isp_ulavg  = client_xml.attribute("ispulavg").as_float();
 
     return curl::Easy_ref_t::code::ok;
 }
