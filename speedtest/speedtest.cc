@@ -279,16 +279,10 @@ auto Speedtest::Config::get_servers(const std::vector<int> &servers_arg,
         {
             auto result = easy_ref.perform();
             if (result.has_exception_set()) {
-                bool is_oom = result.has_exception_type<std::bad_alloc>();
-                result.Catch([](const auto&) noexcept
-                {
-                    // Ignore and continue
-                });
+                if (result.has_exception_type<std::bad_alloc>())
+                    return {result};
 
-                if (is_oom)
-                    return {std::bad_alloc{}};
-                else
-                    continue;
+                result.Catch([](const auto&) noexcept {});
             }
         }
 
