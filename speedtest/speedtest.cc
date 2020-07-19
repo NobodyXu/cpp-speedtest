@@ -294,6 +294,9 @@ auto Speedtest::Config::get_servers(const std::vector<int> &servers_arg,
             }
         }
 
+        if (easy_ref.get_response_code() != 200)
+            continue;
+
         pugi::xml_document doc;
         {
             // The following line requies CharT* std::string::data() noexcept; (Since C++17)
