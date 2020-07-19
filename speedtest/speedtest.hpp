@@ -232,10 +232,10 @@ public:
         auto get_config() noexcept -> Ret;
 
         static constexpr const char *server_list_urls[] = {
-            "://www.speedtest.net/speedtest-servers-static.php",
-            "://c.speedtest.net/speedtest-servers-static.php",
-            "://www.speedtest.net/speedtest-servers.php",
-            "://c.speedtest.net/speedtest-servers.php",
+            "www.speedtest.net/speedtest-servers-static.php",
+            "c.speedtest.net/speedtest-servers-static.php",
+            "www.speedtest.net/speedtest-servers.php",
+            "c.speedtest.net/speedtest-servers.php",
             nullptr
         };
 
@@ -243,6 +243,7 @@ public:
          * @param servers servers to be used.
          * @param exclude servers to be excluded.
          * @param urls the last url must be nullptr, to signal the end of array.
+         *             <br>Should formatted like server_list_urls.
          *
          * Get list of servers from preconfigured site.
          */
