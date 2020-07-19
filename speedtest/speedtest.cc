@@ -207,7 +207,7 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     unsigned upload_max   = upload.attribute("maxchunkcount").as_uint();
 
     auto start = upload_ratio - 1;
-    sizes.upload_len = 7 - start;
+    sizes.upload_len = sizes.up_sizes.size() - start;
     std::uninitialized_copy(sizes.up_sizes.begin() + start, sizes.up_sizes.end(), sizes.upload);
 
     counts.upload = upload_max / sizes.upload_len + upload_max % sizes.upload_len ? 1 : 0;

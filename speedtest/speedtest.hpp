@@ -194,7 +194,7 @@ public:
             };
 
             unsigned char upload_len = 0;
-            unsigned upload[7];
+            unsigned upload[up_sizes.size()];
 
             unsigned download[10] = {
                 350, 500, 750, 1000, 1500, 2000, 2500,
