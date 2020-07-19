@@ -222,16 +222,16 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     this->upload_max = counts.upload * sizes.upload_len;
 
     // Get client info
-    utils::strncpy(client.ip, 46, client_xml.attribute("ip").value());
+    utils::strncpy(client.ip, client_xml.attribute("ip").value());
 
     client.geolocation.lat = client_xml.attribute("lat").as_float();
     client.geolocation.lon = client_xml.attribute("lon").as_float();
 
-    utils::strncpy(client.geolocation.country, 11, client_xml.attribute("country").value());
+    utils::strncpy(client.geolocation.country, client_xml.attribute("country").value());
 
     client.is_loggedin = client_xml.attribute("loggedin").as_bool();
 
-    utils::strncpy(client.isp, 21, client_xml.attribute("isp").value());
+    utils::strncpy(client.isp, client_xml.attribute("isp").value());
 
     client.isp_rating = client_xml.attribute("isprating").as_float();
     client.rating     = client_xml.attribute("rating").as_float();
