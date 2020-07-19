@@ -78,11 +78,9 @@ protected:
 
     /**
      * @param url will be dupped thus can be freed after this call.
-     *
-     *            Have to be in format protocol://... or ://...;
+     *            <br>Have to be in format protocol://... or ://...;
      *            Protocol has to be either http or https.
-     *
-     *            Otherwise, it is UNDEFINED BEHAVIOR.
+     *            <br>Otherwise, it is UNDEFINED BEHAVIOR.
      */
     auto set_url(curl::Easy_ref_t easy_ref, const char *url) noexcept -> 
         Ret_except<void, std::bad_alloc>;
