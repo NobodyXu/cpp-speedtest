@@ -154,7 +154,7 @@ public:
             friend bool operator == (const Geolocation &x, const Geolocation &y) noexcept;
         };
 
-        using server_id = long;
+        using Server_id = long;
 
         struct Server {
             std::unique_ptr<char[]> url;
@@ -172,7 +172,7 @@ public:
         std::unordered_set<Geolocation, typename Geolocation::Hash> server_geolocations;
         std::unordered_set<std::string> server_sponsors;
 
-        std::unordered_map<server_id, Server> servers;
+        std::unordered_map<Server_id, Server> servers;
 
         /**
          * Pointers of servers.
@@ -186,7 +186,7 @@ public:
         /**
          * Id of servers ignored
          */
-        std::unordered_set<server_id> ignore_servers;
+        std::unordered_set<Server_id> ignore_servers;
 
         struct Sizes {
             static constexpr const std::array up_sizes{
@@ -283,8 +283,8 @@ public:
          *
          * Get list of servers from preconfigured site.
          */
-        auto get_servers(const std::unordered_set<server_id> &servers, 
-                         const std::unordered_set<server_id> &exclude, 
+        auto get_servers(const std::unordered_set<Server_id> &servers, 
+                         const std::unordered_set<Server_id> &exclude, 
                          const char * const urls[] = server_list_urls) noexcept -> 
             Ret_except<std::size_t, std::bad_alloc>;
 
