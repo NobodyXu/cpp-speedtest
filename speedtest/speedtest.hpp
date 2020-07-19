@@ -258,8 +258,13 @@ public:
             std::size_t url_parsed = 0;
 
             struct Server {
+                int common_format;
+
                 /**
-                 * format: hostname:port/path
+                 * If common_format == 0, then url contains hostname:port/path;
+                 * If common_format == 1, then url contains hostname only,
+                 * and the port is predefined to be 8080, path predefined to be 
+                 * "/speedtest/upload.php"
                  */
                 std::unique_ptr<char[]> url;
 
@@ -278,6 +283,7 @@ public:
 
             std::unordered_map<Server_id, Server> servers;
 
+            ;
             /**
              * Pointers of servers.
              */
