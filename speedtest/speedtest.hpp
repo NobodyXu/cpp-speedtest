@@ -169,7 +169,7 @@ public:
         /**
          * Pointers of servers.
          */
-        std::vector<std::string_view> closest_servers;
+        std::vector<Server*> closest_servers;
 
         /*
          * Configurations retrieved
