@@ -217,7 +217,11 @@ public:
          */
         Config(Speedtest &speedtest_arg) noexcept;
 
-        class xml_parse_error: public std::runtime_error {
+        class Exception: public std::runtime_error {
+        public:
+            using std::runtime_error::runtime_error;
+        };
+        class xml_parse_error: public Exception {
         public:
             const char *error;
 

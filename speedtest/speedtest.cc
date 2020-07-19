@@ -123,7 +123,7 @@ Speedtest::Config::Config(Speedtest &speedtest_arg) noexcept:
 {}
 
 Speedtest::Config::xml_parse_error::xml_parse_error(const char *error_msg):
-    std::runtime_error{""},
+    Exception{""},
     error{error_msg}
 {}
 const char* Speedtest::Config::xml_parse_error::what() const noexcept
