@@ -5,6 +5,9 @@
 
 #include <cerrno>
 #include <cassert>
+
+#include <cstdint>
+
 #include <cstring>
 #include <cstdio>
 #include <memory>
@@ -129,6 +132,17 @@ Speedtest::Config::xml_parse_error::xml_parse_error(const char *error_msg):
 const char* Speedtest::Config::xml_parse_error::what() const noexcept
 {
     return error;
+}
+
+std::size_t Speedtest::Config::Geolocation::Hash::operator () (const Geolocation &g) const noexcept
+{
+    using type = const std::uint32_t*;
+    return (std::size_t{*reinterpret_cast<type>(&g.lat)} << 32) | std::size_t{*reinterpret_cast<type>(&g.lon)};
+}
+
+bool operator == (const Speedtest::Config::Geolocation &x, const Speedtest::Config::Geolocation &y) noexcept
+{
+    return x.lat == y.lat && x.lon == y.lon;
 }
 
 auto Speedtest::Config::get_config() noexcept -> Ret

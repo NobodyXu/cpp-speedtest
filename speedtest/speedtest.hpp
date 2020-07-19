@@ -144,6 +144,14 @@ public:
             float lon;
 
             char country[11];
+
+            struct Hash {
+                static_assert(sizeof(float) == 4, "Your platform is not supported!");
+
+                std::size_t operator () (const Geolocation &g) const noexcept;
+            };
+
+            friend bool operator == (const Geolocation &x, const Geolocation &y) noexcept;
         };
 
         using server_id = long;
@@ -161,7 +169,7 @@ public:
          * using unordered_set helps to deduplicate them.
          */
         std::unordered_set<std::string> server_names;
-        std::unordered_set<Geolocation> server_geolocations;
+        std::unordered_set<Geolocation, typename Geolocation::Hash> server_geolocations;
         std::unordered_set<std::string> server_sponsors;
 
         std::unordered_map<server_id, Server> servers;
