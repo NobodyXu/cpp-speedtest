@@ -248,7 +248,7 @@ public:
         };
 
         /**
-         * @param servers servers to be used.
+         * @param servers_arg servers to be used.
          * @param exclude servers to be excluded.
          * @param urls the last url must be nullptr, to signal the end of array.
          *             <br>Should formatted like server_list_urls.
