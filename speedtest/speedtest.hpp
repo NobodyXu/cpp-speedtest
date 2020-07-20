@@ -205,8 +205,8 @@ public:
             struct {
                 GeoPosition position;
                 /**
-                 * country name longer than 36
-                 * will be truncated.
+                 * country name longer than 36 will be truncated.
+                 * array is used here to prevent any heap allocation.
                  */
                 char country[36];
             } geolocation;
@@ -287,7 +287,14 @@ public:
              */
             std::unordered_set<std::string> server_names;
 
-            std::unordered_map<GeoPosition, std::string, 
+            /**
+             * std::array is chosen to store country name here
+             * because store std::array<char, 32> or std::string
+             * both takes 32 bytes, but std::array<char, 32> is able to 
+             * pack 35 bytes (excluding null byte) without additional
+             * allocation.
+             */
+            std::unordered_map<GeoPosition, std::array<char, 32>, 
                                typename GeoPosition::Hash> server_geolocations;
 
             std::unordered_set<std::string> server_sponsors;
