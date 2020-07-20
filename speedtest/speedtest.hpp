@@ -341,8 +341,12 @@ public:
                          const char * const urls[] = server_list_urls) noexcept -> 
             Ret_except<Candidate_servers, std::bad_alloc>;
 
-        auto get_best_server() noexcept ->
-            curl::Easy_ref_t::perform_ret_t;
+        /**
+         * @pre candidates.servers.size() != 0
+         * @return lists of server that has the lowest latency
+         */
+        auto get_best_server(Candidate_servers &candidates, bool debug = false) noexcept ->
+            Ret_except<std::vector<Server_id>, std::bad_alloc>;
     };
 
     ;
