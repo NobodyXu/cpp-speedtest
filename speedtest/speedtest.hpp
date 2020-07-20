@@ -341,8 +341,6 @@ public:
                          const char * const urls[] = server_list_urls) noexcept -> 
             Ret_except<Candidate_servers, std::bad_alloc>;
 
-        auto get_closest_servers(unsigned long limit = 5) const noexcept -> const Servers_view_t&;
-
         auto get_best_server() noexcept ->
             curl::Easy_ref_t::perform_ret_t;
     };
