@@ -341,8 +341,8 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                 result.Catch([&](const auto &e) noexcept
                 {
                     if (debug)
-                        std::fprintf(stderr, "Catched exception in %s: e.what() = %s\n",
-                                     __PRETTY_FUNCTION__, e.what());
+                        std::fprintf(stderr, "Catched exception in %s when getting %s: e.what() = %s\n",
+                                     __PRETTY_FUNCTION__, built_url.c_str(), e.what());
                 });
                 continue;
             }
