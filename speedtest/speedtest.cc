@@ -331,13 +331,13 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
         auto servers_xml = doc.child("settings").child("servers");
         for (auto &&server_xml: servers_xml.children("server")) {
             auto server_id = server_xml.attribute("id").as_llong();
-            if (servers_arg.find(server_id) == servers_arg.end())
+            if (servers_arg.count(server_id))
                 continue;
-            if (exclude.find(server_id) != exclude.end())
+            if (exclude.count(server_id))
                 continue;
-            if (ignore_servers.find(server_id) != ignore_servers.end())
+            if (ignore_servers.count(server_id))
                 continue;
-            if (candidates.servers.find(server_id) != candidates.servers.end())
+            if (candidates.servers.count(server_id))
                 continue;
 
             auto position = xml2geoposition(server_xml);
