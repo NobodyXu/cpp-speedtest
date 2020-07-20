@@ -329,8 +329,8 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
         }
 
         auto servers_xml = doc.child("settings").child("servers");
-        for (auto &&server: servers_xml.children("server")) {
-            auto server_id = server.attribute("id").as_llong();
+        for (auto &&server_xml: servers_xml.children("server")) {
+            auto server_id = server_xml.attribute("id").as_llong();
             if (servers_arg.find(server_id) == servers_arg.end())
                 continue;
             if (exclude.find(server_id) != exclude.end())
@@ -339,6 +339,12 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                 continue;
             if (candidates.servers.find(server_id) != candidates.servers.end())
                 continue;
+
+            auto position = xml2geoposition(server_xml);
+            if (candidates.server_geolocations.count(position)) {
+                auto it = candidates.server_geolocations.emplace().first;
+                utils::strncpy(it->second, server_xml.attribute("country").value());
+            }
 
             ;
         }
