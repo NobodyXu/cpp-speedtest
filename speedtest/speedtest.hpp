@@ -290,7 +290,7 @@ public:
              */
             std::unordered_set<string> server_names;
 
-            std::unordered_map<GeoPosition, std::array<char, 32>, 
+            std::unordered_map<GeoPosition, string, 
                                typename GeoPosition::Hash> server_geolocations;
 
             std::unordered_set<string> server_sponsors;
