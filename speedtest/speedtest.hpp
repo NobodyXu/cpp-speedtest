@@ -204,7 +204,11 @@ public:
 
             struct {
                 GeoPosition position;
-                char country[11];
+                /**
+                 * country name longer than 36
+                 * will be truncated.
+                 */
+                char country[36];
             } geolocation;
 
             bool is_loggedin;
