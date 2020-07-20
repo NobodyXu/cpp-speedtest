@@ -323,7 +323,7 @@ public:
             /**
              * Pointers of servers.
              */
-            std::vector<Server*> closest_servers;
+            std::vector<Server_id> closest_servers;
         };
 
         /**
