@@ -338,7 +338,8 @@ public:
          */
         auto get_servers(const std::unordered_set<Server_id> &servers, 
                          const std::unordered_set<Server_id> &exclude, 
-                         const char * const urls[] = server_list_urls) noexcept -> 
+                         const char * const urls[] = server_list_urls,
+                         bool debug = false) noexcept -> 
             Ret_except<Candidate_servers, std::bad_alloc>;
 
         /**

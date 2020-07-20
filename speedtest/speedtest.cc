@@ -7,6 +7,7 @@
 
 #include <cerrno>
 #include <cassert>
+#include <cstdio>
 
 #include <cstdint>
 
@@ -274,7 +275,8 @@ auto Speedtest::Config::get_config() noexcept -> Ret
 
 auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers_arg, 
                                     const std::unordered_set<Server_id> &exclude, 
-                                    const char * const urls[]) noexcept ->
+                                    const char * const urls[],
+                                    bool debug) noexcept ->
     Ret_except<Candidate_servers, std::bad_alloc>
 {
     if (!easy) {
@@ -336,7 +338,12 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                 if (result.has_exception_type<std::bad_alloc>())
                     return {result};
 
-                result.Catch([](const auto&) noexcept {});
+                result.Catch([&](const auto &e) noexcept
+                {
+                    if (debug)
+                        std::fprintf(stderr, "Catched exception in %s: e.what() = %s\n",
+                                     __PRETTY_FUNCTION__, e.what());
+                });
                 continue;
             }
         }
@@ -348,8 +355,13 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
         {
             // The following line requies CharT* std::string::data() noexcept; (Since C++17)
             auto result = doc.load_buffer_inplace(response.data(), response.size());
-            if (!result)
+            if (!result) {
+                if (debug) {
+                    std::fprintf(stderr, "pugixml failed to parse xml retrieved from %s: %s\n",
+                                 built_url.c_str(), result.description());
+                }
                 continue;
+            }
         }
 
         candidates.shortest_distance = std::numeric_limits<float>::max();
