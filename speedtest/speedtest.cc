@@ -374,20 +374,16 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
 
             static constexpr const auto &common_pattern = Candidate_servers::Server::common_pattern;
             std::string_view url = server_xml.attribute("url").value();
-            bool is_common_pattern;
-            if (utils::has_suffix(url, common_pattern)) {
-                url = server_xml.attribute("host").value();
-                if (utils::has_suffix(url, common_pattern.substr(0, 5)))
-                    url.remove_suffix(5); // Remove ':8080' from hostname.
-                is_common_pattern = true;
-            } else {
-                if (utils::has_prefix(url, "http")) {
-                    url.remove_prefix(4);
-                    if (url[0] == 's')
-                        url.remove_prefix(1);
-                    url.remove_prefix(3); // Remove '://'
-                }
-                is_common_pattern = true;
+
+            bool is_common_pattern = utils::has_suffix(url, common_pattern);
+            if (is_common_pattern)
+                url.remove_suffix(common_pattern.size()); // Remove common_pattern off the url
+
+            if (utils::has_prefix(url, "http")) {
+                url.remove_prefix(4);
+                if (url[0] == 's')
+                    url.remove_prefix(1);
+                url.remove_prefix(3); // Remove '://'
             }
 
             ;
