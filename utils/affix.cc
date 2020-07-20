@@ -1,4 +1,4 @@
-#include "has_suffix.hpp"
+#include "affix.hpp"
 #include <cstring>
 
 namespace speedtest::utils {
