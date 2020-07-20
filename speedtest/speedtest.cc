@@ -157,6 +157,16 @@ std::size_t Speedtest::Config::Candidate_servers::string_hash::operator () (cons
     return std::hash<type>{}(sv);
 }
 
+Speedtest::Config::Candidate_servers::Server::Server(std::unique_ptr<char[]> &&url, 
+                                                     const char *name, 
+                                                     GeoPosition pos, 
+                                                     const char *sponsor) noexcept:
+    url{std::move(url)},
+    name{name},
+    position{pos},
+    sponsor{sponsor}
+{}
+
 auto xml2geoposition(pugi::xml_node &xml_node)
 {
     Speedtest::Config::GeoPosition position;
