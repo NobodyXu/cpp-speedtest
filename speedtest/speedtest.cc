@@ -2,6 +2,7 @@
 #include "../curl-cpp/curl_easy.hpp"
 #include "../utils/split2int.hpp"
 #include "../utils/strncpy.hpp"
+#include "../utils/affix.hpp"
 
 #include <cerrno>
 #include <cassert>
@@ -295,6 +296,7 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
     const auto prefix_size = built_url.size();
 
     Candidate_servers candidates;
+
     std::string response;
     /**
      * On my machine, the maximum response I get from server_list_urls
@@ -369,6 +371,24 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
 
             const char *name = store_attr("name", candidates.server_names);
             const char *sponsor = store_attr("sponsor", candidates.server_sponsors);
+
+            static constexpr const auto &common_pattern = Candidate_servers::Server::common_pattern;
+            std::string_view url = server_xml.attribute("url").value();
+            bool is_common_pattern;
+            if (utils::has_suffix(url, common_pattern)) {
+                url = server_xml.attribute("host").value();
+                if (utils::has_suffix(url, common_pattern.substr(0, 5)))
+                    url.remove_suffix(5); // Remove ':8080' from hostname.
+                is_common_pattern = true;
+            } else {
+                if (utils::has_prefix(url, "http")) {
+                    url.remove_prefix(4);
+                    if (url[0] == 's')
+                        url.remove_prefix(1);
+                    url.remove_prefix(3); // Remove '://'
+                }
+                is_common_pattern = true;
+            }
 
             ;
         }
