@@ -416,12 +416,12 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                 url.remove_prefix(3); // Remove '://'
             }
 
-            auto url_ptr = std::unique_ptr<char[]>{new (std::nothrow) char[1 + url.size()]};
+            auto url_ptr = std::unique_ptr<char[]>{new (std::nothrow) char[1 + url.size() + 1]};
             if (!url_ptr)
                 return {std::bad_alloc{}};
 
             url_ptr[0] = char{is_common_pattern} + 1;
-            utils::strncpy(url_ptr.get() + 1, url.size(), url.data());
+            utils::strncpy(url_ptr.get() + 1, url.size() + 1, url.data());
 
             candidates.servers.try_emplace(server_id, std::move(url_ptr), name, position, sponsor);
 
