@@ -250,14 +250,6 @@ public:
 
         auto get_config() noexcept -> Ret;
 
-        static constexpr const char *server_list_urls[] = {
-            "www.speedtest.net/speedtest-servers-static.php",
-            "c.speedtest.net/speedtest-servers-static.php",
-            "www.speedtest.net/speedtest-servers.php",
-            "c.speedtest.net/speedtest-servers.php",
-            nullptr
-        };
-
         struct Candidate_servers {
             /**
              * how many urls is parsed by get_servers
@@ -324,6 +316,14 @@ public:
              * Pointers of servers.
              */
             std::vector<Server_id> closest_servers;
+        };
+
+        static constexpr const char *server_list_urls[] = {
+            "www.speedtest.net/speedtest-servers-static.php",
+            "c.speedtest.net/speedtest-servers-static.php",
+            "www.speedtest.net/speedtest-servers.php",
+            "c.speedtest.net/speedtest-servers.php",
+            nullptr
         };
 
         /**
