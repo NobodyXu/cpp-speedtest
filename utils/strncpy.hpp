@@ -16,6 +16,26 @@ auto strncpy(char (&dest)[dest_sz], const char *src) noexcept
 {
     return strncpy(dest, dest_sz, src);
 }
+
+/**
+ * @param c if it is std::string, then -std=c++17 has to be opt in;
+ *          <br>if it is std::array/std::vector, then -std=c++11 has to be opt in.
+ *          <br>Otherwise, it must support `T* c.data()` and `c.size()`.
+ */
+template <class Container>
+auto strncpy(Container &&c, const char *src) noexcept
+{
+    /**
+     * std::string supports:
+     *     CharT* data() noexcept; (since C++17)
+     * only from C++17.
+     *
+     * std::array and std::vector supports:
+     *     T* data() noexcept; (since C++11)
+     * from C++11.
+     */
+    return strncpy(c.data(), c.size(), src);
+}
 } /* namespace speedtest::utils */
 
 #endif
