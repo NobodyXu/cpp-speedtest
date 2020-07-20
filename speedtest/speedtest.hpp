@@ -262,6 +262,8 @@ public:
             std::size_t url_parsed = 0;
 
             struct Server {
+                static constexpr const auto *common_pattern = "*:8080/speedtest/upload.php";
+
                 /**
                  * If url.get()[0] == 1, then url contains hostname:port/path;
                  * If url.get()[1] == 2, then url contains hostname only,
