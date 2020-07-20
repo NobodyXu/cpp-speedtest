@@ -341,12 +341,11 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                 continue;
 
             auto position = xml2geoposition(server_xml);
-            if (candidates.server_geolocations.count(position)) {
+            if (!candidates.server_geolocations.count(position)) {
                 auto it = candidates.server_geolocations.emplace().first;
                 utils::strncpy(it->second, server_xml.attribute("country").value());
             }
 
-            ;
         }
 
         ++candidates.url_parsed;
