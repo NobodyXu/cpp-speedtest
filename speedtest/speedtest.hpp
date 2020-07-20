@@ -276,21 +276,20 @@ public:
             };
 
             /**
-             * (lat, lon, country), name, cc, spnsor are often duplicated,
-             * using unordered_set helps to deduplicate them.
-             *
-             * std::string is used instead of std::unique_ptr<char[]> due to their
-             * Small String Optimization.
-             */
-            std::unordered_set<std::string> server_names;
-
-            /**
              * std::array is chosen to store country name here
              * because store std::array<char, 32> or std::string
              * both takes 32 bytes, but std::array<char, 32> is able to 
              * pack 35 bytes (excluding null byte) without additional
              * allocation.
              */
+            using string = std::array<char, 32>;
+
+            /**
+             * (lat, lon, country), name, cc, spnsor are often duplicated,
+             * using unordered_set helps to deduplicate them.
+             */
+            std::unordered_set<string> server_names;
+
             std::unordered_map<GeoPosition, std::array<char, 32>, 
                                typename GeoPosition::Hash> server_geolocations;
 
