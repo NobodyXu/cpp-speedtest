@@ -3,6 +3,7 @@
 #include "../utils/split2int.hpp"
 #include "../utils/strncpy.hpp"
 #include "../utils/affix.hpp"
+#include "../utils/geo_distance.hpp"
 
 #include <cerrno>
 #include <cassert>
@@ -408,7 +409,17 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
 
             candidates.servers.try_emplace(server_id, std::move(url_ptr), name, position, sponsor);
 
-            ;
+            auto d = utils::geo_distance(position.lat, position.lon, 
+                                         client.geolocation.position.lat, client.geolocation.position.lon);
+
+            if (d > candidates.shortest_distance)
+                continue;
+
+            if (d < candidates.shortest_distance) {
+                candidates.shortest_distance = d;
+                candidates.closest_servers.clear();
+            }
+            candidates.closest_servers.emplace_back(server_id);
         }
 
         ++candidates.url_parsed;
