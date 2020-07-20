@@ -347,9 +347,13 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                 continue;
             }
         }
-
-        if (easy_ref.get_response_code() != 200)
+        
+        auto response_code = easy_ref.get_response_code();
+        if (response_code != 200) {
+            if (debug)
+                std::fprintf(stderr, "Get request to %s returned %ld\n", built_url.c_str(), response_code);
             continue;
+        }
 
         pugi::xml_document doc;
         {
