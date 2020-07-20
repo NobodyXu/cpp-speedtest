@@ -10,6 +10,8 @@
 
 #include <cstring>
 #include <cstdio>
+
+#include <string_view>
 #include <memory>
 #include <utility>
 
@@ -143,6 +145,13 @@ std::size_t Speedtest::Config::GeoPosition::Hash::operator () (const GeoPosition
 bool operator == (const Speedtest::Config::GeoPosition &x, const Speedtest::Config::GeoPosition &y) noexcept
 {
     return x.lat == y.lat && x.lon == y.lon;
+}
+
+std::size_t Speedtest::Config::Candidate_servers::string_hash::operator () (const string &s) const noexcept
+{
+    using type = std::string_view;
+    type sv = s.data();
+    return std::hash<type>{}(sv);
 }
 
 auto xml2geoposition(pugi::xml_node &xml_node)
@@ -346,6 +355,22 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                 utils::strncpy(it->second, server_xml.attribute("country").value());
             }
 
+            auto store_attr = [&](const char *attr_name, auto &c)
+            {
+                Candidate_servers::string attr_val;
+                utils::strncpy(attr_val, server_xml.attribute(attr_name).value());
+
+                auto it = c.find(attr_val);
+                if (it == c.end())
+                    it = c.emplace(attr_val).first;
+
+                return it->data();
+            };
+
+            const char *name = store_attr("name", candidates.server_names);
+            const char *sponsor = store_attr("sponsor", candidates.server_sponsors);
+
+            ;
         }
 
         ++candidates.url_parsed;

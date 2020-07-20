@@ -284,16 +284,20 @@ public:
              */
             using string = std::array<char, 32>;
 
+            struct string_hash {
+                std::size_t operator () (const string &s) const noexcept;
+            };
+
             /**
              * (lat, lon, country), name, cc, spnsor are often duplicated,
              * using unordered_set helps to deduplicate them.
              */
-            std::unordered_set<string> server_names;
+            std::unordered_set<string, string_hash> server_names;
 
             std::unordered_map<GeoPosition, string, 
                                typename GeoPosition::Hash> server_geolocations;
 
-            std::unordered_set<string> server_sponsors;
+            std::unordered_set<string, string_hash> server_sponsors;
 
             std::unordered_map<Server_id, Server> servers;
 
