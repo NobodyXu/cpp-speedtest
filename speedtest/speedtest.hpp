@@ -145,21 +145,18 @@ public:
          * Configurations retrieved
          */
 
-        struct Geolocation {
+        struct GeoPosition {
             float lat;
             float lon;
 
-            char country[11];
-
             struct Hash {
-                static_assert(sizeof(float) == 4, "Your platform is not supported!");
+                static_assert(sizeof(float) <= 4, "float on this platform does not follow IEEE 754 format");
 
-                std::size_t operator () (const Geolocation &g) const noexcept;
+                std::size_t operator () (const GeoPosition &g) const noexcept;
             };
 
-            friend bool operator == (const Geolocation &x, const Geolocation &y) noexcept;
+            friend bool operator == (const GeoPosition &x, const GeoPosition &y) noexcept;
         };
-
 
         /**
          * Id of servers ignored
@@ -205,7 +202,10 @@ public:
              */
             char ip[46];
 
-            Geolocation geolocation;
+            struct {
+                GeoPosition position;
+                char country[11];
+            } geolocation;
 
             bool is_loggedin;
 
@@ -270,7 +270,7 @@ public:
                 std::unique_ptr<char[]> url;
 
                 const char *name;
-                const Geolocation *geolocation;
+                GeoPosition position;
                 const char *sponsor;
             };
 
@@ -282,7 +282,10 @@ public:
              * Small String Optimization.
              */
             std::unordered_set<std::string> server_names;
-            std::unordered_set<std::unique_ptr<Geolocation>, typename Geolocation::Hash> server_geolocations;
+
+            std::unordered_map<GeoPosition, std::array<char, 36>, 
+                               typename GeoPosition::Hash> server_geolocations;
+
             std::unordered_set<std::string> server_sponsors;
 
             std::unordered_map<Server_id, Server> servers;

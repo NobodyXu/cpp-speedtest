@@ -134,15 +134,25 @@ const char* Speedtest::Config::xml_parse_error::what() const noexcept
     return error;
 }
 
-std::size_t Speedtest::Config::Geolocation::Hash::operator () (const Geolocation &g) const noexcept
+std::size_t Speedtest::Config::GeoPosition::Hash::operator () (const GeoPosition &g) const noexcept
 {
     using type = const std::uint32_t*;
     return (std::size_t{*reinterpret_cast<type>(&g.lat)} << 32) | std::size_t{*reinterpret_cast<type>(&g.lon)};
 }
 
-bool operator == (const Speedtest::Config::Geolocation &x, const Speedtest::Config::Geolocation &y) noexcept
+bool operator == (const Speedtest::Config::GeoPosition &x, const Speedtest::Config::GeoPosition &y) noexcept
 {
     return x.lat == y.lat && x.lon == y.lon;
+}
+
+auto xml2geoposition(pugi::xml_node &xml_node)
+{
+    Speedtest::Config::GeoPosition position;
+
+    position.lat = xml_node.attribute("lat").as_float();
+    position.lon = xml_node.attribute("lon").as_float();
+
+    return position;
 }
 
 auto Speedtest::Config::get_config() noexcept -> Ret
@@ -224,9 +234,7 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     // Get client info
     utils::strncpy(client.ip, client_xml.attribute("ip").value());
 
-    client.geolocation.lat = client_xml.attribute("lat").as_float();
-    client.geolocation.lon = client_xml.attribute("lon").as_float();
-
+    client.geolocation.position = xml2geoposition(client_xml);
     utils::strncpy(client.geolocation.country, client_xml.attribute("country").value());
 
     client.is_loggedin = client_xml.attribute("loggedin").as_bool();
