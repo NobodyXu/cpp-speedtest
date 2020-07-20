@@ -287,11 +287,7 @@ public:
              */
             std::unordered_set<std::string> server_names;
 
-            /**
-             * country name longer than 36
-             * will be truncated.
-             */
-            std::unordered_map<GeoPosition, std::array<char, 36>, 
+            std::unordered_map<GeoPosition, std::string, 
                                typename GeoPosition::Hash> server_geolocations;
 
             std::unordered_set<std::string> server_sponsors;
