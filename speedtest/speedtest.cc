@@ -351,6 +351,7 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                 continue;
         }
 
+        candidates.shortest_distance = std::numeric_limits<float>::max();
         auto servers_xml = doc.child("settings").child("servers");
         for (auto &&server_xml: servers_xml.children("server")) {
             auto server_id = server_xml.attribute("id").as_llong();
