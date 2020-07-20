@@ -275,6 +275,15 @@ public:
                 const char *name;
                 GeoPosition position;
                 const char *sponsor;
+
+                // Provide this for std::pair
+                Server(std::unique_ptr<char[]> &&url, 
+                       const char *name, 
+                       GeoPosition pos, 
+                       const char *sponsor) noexcept;
+
+                Server(Server&&) = default;
+                Server& operator = (Server&&) = default;
             };
 
             /**
