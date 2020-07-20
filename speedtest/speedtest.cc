@@ -443,4 +443,41 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
 
     return candidates;
 }
+
+auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debug) noexcept ->
+    Ret_except<std::vector<Server_id>, std::bad_alloc>
+{
+    if (!easy) {
+        easy = speedtest.create_easy();
+        if (!easy)
+            return {std::bad_alloc{}};
+    }
+    auto easy_ref = curl::Easy_ref_t{easy.get()};
+
+    std::vector<Server_id> best_servers;
+
+    static constexpr const auto *query_prefix = "/latency.txt?x=";
+
+    std::string built_url;
+    /**
+     * The longest element of servers I observed is 69-byte long, 
+     * protocol takes 5 or 4 bytes, depending on whether it is http or https,
+     * the query_prefix takes sizeof(query_prefix) and at most 20 bytes
+     * for the unix timestamp.
+     */
+    built_url.reserve(4 + std::size_t(speedtest.secure) + 3 + 69 + sizeof(query_prefix) + 20);
+
+    built_url.append("http");
+    if (speedtest.secure)
+        built_url += 's';
+    built_url.append("://");
+
+    // size of protocol prefix.
+    // Would be used to reset built_url.
+    const auto prefix_size = built_url.size();
+
+    ;
+
+    return std::move(best_servers);
+}
 } /* namespace speedtest */
