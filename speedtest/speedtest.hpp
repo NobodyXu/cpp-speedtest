@@ -293,7 +293,7 @@ public:
             std::unordered_map<GeoPosition, std::array<char, 32>, 
                                typename GeoPosition::Hash> server_geolocations;
 
-            std::unordered_set<std::string> server_sponsors;
+            std::unordered_set<string> server_sponsors;
 
             std::unordered_map<Server_id, Server> servers;
 
