@@ -5,7 +5,7 @@
 
 namespace speedtest::utils {
 bool has_suffix(std::string_view str, std::string_view suffix) noexcept;
-
+bool has_prefix(std::string_view str, std::string_view prefix) noexcept;
 } /* namespace speedtest::utils */
 
 #endif
