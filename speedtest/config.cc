@@ -52,7 +52,8 @@ const char* Speedtest::Config::xml_parse_error::what() const noexcept
 std::size_t Speedtest::Config::GeoPosition::Hash::operator () (const GeoPosition &g) const noexcept
 {
     using type = const std::uint32_t*;
-    return (std::size_t{*reinterpret_cast<type>(&g.lat)} << 32) | std::size_t{*reinterpret_cast<type>(&g.lon)};
+    return (std::uint64_t{*reinterpret_cast<type>(&g.lat)} << 32) | 
+            std::uint64_t{*reinterpret_cast<type>(&g.lon)};
 }
 
 bool operator == (const Speedtest::Config::GeoPosition &x, const Speedtest::Config::GeoPosition &y) noexcept
