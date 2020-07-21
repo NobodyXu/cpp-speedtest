@@ -113,26 +113,19 @@ auto Speedtest::Config::get_config() noexcept -> Ret
      */
     response.reserve(13700);
 
-    {
-        auto result = easy_ref.perform();
-        if (result.has_exception_set())
-            return {result};
-    }
+    if (auto result = easy_ref.perform(); result.has_exception_set())
+        return {result};
 
-    auto response_code = easy_ref.get_response_code();
-    if (response_code != 200) {
+    if (auto response_code = easy_ref.get_response_code(); response_code != 200) {
         char buffer[64];
         std::snprintf(buffer, 64, "Get response code %ld", response_code);
         return {Error_Response_code{buffer}};
     }
 
     pugi::xml_document doc;
-    {
-        // The following line requies CharT* std::string::data() noexcept; (Since C++17)
-        auto result = doc.load_buffer_inplace(response.data(), response.size());
-        if (!result)
-            return {xml_parse_error{result.description()}};
-    }
+    // The following line requies CharT* std::string::data() noexcept; (Since C++17)
+    if (auto result = doc.load_buffer_inplace(response.data(), response.size()); !result)
+        return {xml_parse_error{result.description()}};
 
     auto settings = doc.child("settings");
 
@@ -217,33 +210,26 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
     response.reserve(222000);
 
     for (std::size_t i = 0; urls[i] != nullptr; ++i) {
-        {
-            auto result = speedtest.set_url(easy_ref, {urls[i], query});
-            if (result.has_exception_set())
-                return {result};
-        }
+        if (auto result = speedtest.set_url(easy_ref, {urls[i], query}); result.has_exception_set())
+            return {result};
 
         response.clear();
         easy_ref.set_readall_writeback(response);
 
-        {
-            auto result = easy_ref.perform();
-            if (result.has_exception_set()) {
-                if (result.has_exception_type<std::bad_alloc>())
-                    return {result};
+        if (auto result = easy_ref.perform(); result.has_exception_set()) {
+            if (result.has_exception_type<std::bad_alloc>())
+                return {result};
 
-                result.Catch([&](const auto &e) noexcept
-                {
-                    if (debug)
-                        std::fprintf(stderr, "Catched exception in %s when getting %s: e.what() = %s\n",
-                                     __PRETTY_FUNCTION__, easy_ref.getinfo_effective_url(), e.what());
-                });
-                continue;
-            }
+            result.Catch([&](const auto &e) noexcept
+            {
+                if (debug)
+                    std::fprintf(stderr, "Catched exception in %s when getting %s: e.what() = %s\n",
+                                 __PRETTY_FUNCTION__, easy_ref.getinfo_effective_url(), e.what());
+            });
+            continue;
         }
         
-        auto response_code = easy_ref.get_response_code();
-        if (response_code != 200) {
+        if (auto response_code = easy_ref.get_response_code(); response_code != 200) {
             if (debug)
                 std::fprintf(stderr, "Get request to %s returned %ld\n", 
                              easy_ref.getinfo_effective_url(), response_code);
@@ -251,16 +237,13 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
         }
 
         pugi::xml_document doc;
-        {
-            // The following line requies CharT* std::string::data() noexcept; (Since C++17)
-            auto result = doc.load_buffer_inplace(response.data(), response.size());
-            if (!result) {
-                if (debug) {
-                    std::fprintf(stderr, "pugixml failed to parse xml retrieved from %s: %s\n",
-                                 easy_ref.getinfo_effective_url(), result.description());
-                }
-                continue;
-            }
+
+        // The following line requies CharT* std::string::data() noexcept; (Since C++17)
+        if (auto result = doc.load_buffer_inplace(response.data(), response.size()); !result) {
+            if (debug)
+                std::fprintf(stderr, "pugixml failed to parse xml retrieved from %s: %s\n",
+                             easy_ref.getinfo_effective_url(), result.description());
+            continue;
         }
 
         candidates.shortest_distance = std::numeric_limits<float>::max();
@@ -414,30 +397,26 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
                     return {result};
             }
 
-            {
-                auto result = easy_ref.perform();
-                if (result.has_exception_set()) {
-                    if (result.has_exception_type<std::bad_alloc>())
-                        return {result};
+            if (auto result = easy_ref.perform(); result.has_exception_set()) {
+                if (result.has_exception_type<std::bad_alloc>())
+                    return {result};
 
-                    result.Catch([&](const auto &e) noexcept
-                    {
-                        if (debug)
-                            std::fprintf(stderr, "Catched exception in %s when getting %s: e.what() = %s\n",
-                                         __PRETTY_FUNCTION__, easy_ref.getinfo_effective_url(), e.what());
-                    });
-                    cummulated_time += 3600;
-                    continue;
-                }
-                
-                auto response_code = easy_ref.get_response_code();
-                if (response_code != 200) {
+                result.Catch([&](const auto &e) noexcept
+                {
                     if (debug)
-                        std::fprintf(stderr, "Get request to %s returned %ld\n", 
-                                     easy_ref.getinfo_effective_url(), response_code);
-                    cummulated_time += 3600;
-                    continue;
-                }
+                        std::fprintf(stderr, "Catched exception in %s when getting %s: e.what() = %s\n",
+                                     __PRETTY_FUNCTION__, easy_ref.getinfo_effective_url(), e.what());
+                });
+                cummulated_time += 3600;
+                continue;
+            }
+            
+            if (auto response_code = easy_ref.get_response_code(); response_code != 200) {
+                if (debug)
+                    std::fprintf(stderr, "Get request to %s returned %ld\n", 
+                                 easy_ref.getinfo_effective_url(), response_code);
+                cummulated_time += 3600;
+                continue;
             }
 
             cummulated_time += easy_ref.getinfo_transfer_time();
