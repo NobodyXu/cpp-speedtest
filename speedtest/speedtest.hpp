@@ -182,7 +182,7 @@ public:
          * 
          * @return true if perform succeeds and response code == 200, false if otherwise.
          */
-        auto perform_and_check(const char *fname, bool debug) noexcept -> Ret_except<bool, std::bad_alloc>;
+        auto perform_and_check(const char *fname) noexcept -> Ret_except<bool, std::bad_alloc>;
 
     public:
         using Server_id = long;
@@ -381,8 +381,7 @@ public:
          */
         auto get_servers(const std::unordered_set<Server_id> &servers, 
                          const std::unordered_set<Server_id> &exclude, 
-                         const char * const urls[] = server_list_urls,
-                         bool debug = false) noexcept -> 
+                         const char * const urls[] = server_list_urls) noexcept -> 
             Ret_except<Candidate_servers, std::bad_alloc>;
 
         /**
@@ -396,7 +395,7 @@ public:
          * and returns the one with lowest average transfer time for fixed
          * amount of data.
          */
-        auto get_best_server(Candidate_servers &candidates, bool debug = false) noexcept ->
+        auto get_best_server(Candidate_servers &candidates) noexcept ->
             Ret_except<std::pair<std::vector<Server_id>, std::size_t>, std::bad_alloc>;
     };
 

@@ -179,7 +179,7 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     return curl::Easy_ref_t::code::ok;
 }
 
-auto Speedtest::Config::perform_and_check(const char *fname, bool debug) noexcept -> 
+auto Speedtest::Config::perform_and_check(const char *fname) noexcept -> 
     Ret_except<bool, std::bad_alloc>
 {
     curl::Easy_ref_t easy_ref{easy.get()};
@@ -191,17 +191,15 @@ auto Speedtest::Config::perform_and_check(const char *fname, bool debug) noexcep
         result.Catch([&](const auto &e) noexcept
         {
             auto *type_name = utils::type_name<std::decay_t<decltype(e)>>();
-            if (debug)
-                std::fprintf(stderr, "Catched exception %s when getting %s in %s: e.what() = %s\n",
-                             type_name, easy_ref.getinfo_effective_url(), fname, e.what());
+            speedtest.error("Catched exception %s when getting %s in %s: e.what() = %s\n",
+                            type_name, easy_ref.getinfo_effective_url(), fname, e.what());
         });
         return false;
     }
     
     if (auto response_code = easy_ref.get_response_code(); response_code != 200) {
-        if (debug)
-            std::fprintf(stderr, "Get request to %s returned %ld in %s\n", 
-                         easy_ref.getinfo_effective_url(), response_code, fname);
+        speedtest.error("Get request to %s returned %ld in %s\n", 
+                        easy_ref.getinfo_effective_url(), response_code, fname);
         return false;
     }
 
@@ -210,8 +208,7 @@ auto Speedtest::Config::perform_and_check(const char *fname, bool debug) noexcep
 
 auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers_arg, 
                                     const std::unordered_set<Server_id> &exclude, 
-                                    const char * const urls[],
-                                    bool debug) noexcept ->
+                                    const char * const urls[]) noexcept ->
     Ret_except<Candidate_servers, std::bad_alloc>
 {
     auto easy_ref = get_easy_ref();
@@ -243,7 +240,7 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
         response.clear();
         easy_ref.set_readall_writeback(response);
 
-        if (auto result = perform_and_check(__PRETTY_FUNCTION__, debug); result.has_exception_set())
+        if (auto result = perform_and_check(__PRETTY_FUNCTION__); result.has_exception_set())
             return {result};
         else if (!result)
             continue;
@@ -252,9 +249,8 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
 
         // The following line requies CharT* std::string::data() noexcept; (Since C++17)
         if (auto result = doc.load_buffer_inplace(response.data(), response.size()); !result) {
-            if (debug)
-                std::fprintf(stderr, "pugixml failed to parse xml retrieved from %s: %s\n",
-                             easy_ref.getinfo_effective_url(), result.description());
+            speedtest.error("pugixml failed to parse xml retrieved from %s: %s\n",
+                            easy_ref.getinfo_effective_url(), result.description());
             continue;
         }
 
@@ -334,7 +330,7 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
     return candidates;
 }
 
-auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debug) noexcept ->
+auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept ->
         Ret_except<std::pair<std::vector<Server_id>, std::size_t>, std::bad_alloc>
 {
     auto easy_ref = get_easy_ref();
@@ -357,22 +353,19 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
     for (const auto &server_id: candidates.closest_servers) {
         const auto it = candidates.servers.find(server_id);
         if (it == candidates.servers.end()) {
-            if (debug)
-                std::fprintf(stderr, "Can't find server with id = %ld\n", server_id);
+            speedtest.error("Can't find server with id = %ld\n", server_id);
             continue;
         }
         const auto &url = it->second.url;
 
         static constexpr const auto &common_pattern = Candidate_servers::Server::common_pattern;
         if (!url) {
-            if (debug)
-                std::fprintf(stderr, "server with i = %ld have url == nullptr\n", server_id);
+            speedtest.error("server with i = %ld have url == nullptr\n", server_id);
             continue;
         }
         if (url[0] == 0 || url[0] > 2) {
-            if (debug)
-                std::fprintf(stderr, "server with i = %ld have url[0] not in [1, 2], but have %d\n", 
-                             server_id, int(url[0]));
+            speedtest.error("server with i = %ld have url[0] not in [1, 2], but have %d\n", 
+                            server_id, int(url[0]));
             continue;
         }
 
@@ -409,7 +402,7 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
                     return {result};
             }
 
-            if (auto result = perform_and_check(__PRETTY_FUNCTION__, debug); result.has_exception_set())
+            if (auto result = perform_and_check(__PRETTY_FUNCTION__); result.has_exception_set())
                 return {result};
             else if (!result)
                 cummulated_time += 3600;
