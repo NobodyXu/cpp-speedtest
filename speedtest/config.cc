@@ -77,7 +77,7 @@ Speedtest::Config::Candidate_servers::Server::Server(std::unique_ptr<char[]> &&u
     sponsor{sponsor}
 {}
 
-auto xml2geoposition(pugi::xml_node &xml_node)
+static auto xml2geoposition(pugi::xml_node &xml_node)
 {
     Speedtest::Config::GeoPosition position;
 
