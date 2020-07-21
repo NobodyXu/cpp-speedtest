@@ -2,6 +2,7 @@
 
 #include "../curl-cpp/curl_easy.hpp"
 
+#include "../utils/type_name.hpp"
 #include "../utils/split2int.hpp"
 #include "../utils/strncpy.hpp"
 #include "../utils/affix.hpp"
@@ -179,6 +180,35 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     return curl::Easy_ref_t::code::ok;
 }
 
+auto Speedtest::Config::perform_and_check(const char *fname, bool debug) noexcept -> 
+    Ret_except<bool, std::bad_alloc>
+{
+    curl::Easy_ref_t easy_ref{easy.get()};
+
+    if (auto result = easy_ref.perform(); result.has_exception_set()) {
+        if (result.has_exception_type<std::bad_alloc>())
+            return {result};
+
+        result.Catch([&](const auto &e) noexcept
+        {
+            auto *type_name = utils::type_name<std::decay_t<decltype(e)>>();
+            if (debug)
+                std::fprintf(stderr, "Catched exception %s when getting %s in %s: e.what() = %s\n",
+                             type_name, easy_ref.getinfo_effective_url(), fname, e.what());
+        });
+        return false;
+    }
+    
+    if (auto response_code = easy_ref.get_response_code(); response_code != 200) {
+        if (debug)
+            std::fprintf(stderr, "Get request to %s returned %ld in %s\n", 
+                         easy_ref.getinfo_effective_url(), response_code, fname);
+        return false;
+    }
+
+    return true;
+}
+
 auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers_arg, 
                                     const std::unordered_set<Server_id> &exclude, 
                                     const char * const urls[],
@@ -216,25 +246,10 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
         response.clear();
         easy_ref.set_readall_writeback(response);
 
-        if (auto result = easy_ref.perform(); result.has_exception_set()) {
-            if (result.has_exception_type<std::bad_alloc>())
-                return {result};
-
-            result.Catch([&](const auto &e) noexcept
-            {
-                if (debug)
-                    std::fprintf(stderr, "Catched exception in %s when getting %s: e.what() = %s\n",
-                                 __PRETTY_FUNCTION__, easy_ref.getinfo_effective_url(), e.what());
-            });
+        if (auto result = perform_and_check(__PRETTY_FUNCTION__, debug); result.has_exception_set())
+            return {result};
+        else if (!result)
             continue;
-        }
-        
-        if (auto response_code = easy_ref.get_response_code(); response_code != 200) {
-            if (debug)
-                std::fprintf(stderr, "Get request to %s returned %ld\n", 
-                             easy_ref.getinfo_effective_url(), response_code);
-            continue;
-        }
 
         pugi::xml_document doc;
 
@@ -397,29 +412,12 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
                     return {result};
             }
 
-            if (auto result = easy_ref.perform(); result.has_exception_set()) {
-                if (result.has_exception_type<std::bad_alloc>())
-                    return {result};
-
-                result.Catch([&](const auto &e) noexcept
-                {
-                    if (debug)
-                        std::fprintf(stderr, "Catched exception in %s when getting %s: e.what() = %s\n",
-                                     __PRETTY_FUNCTION__, easy_ref.getinfo_effective_url(), e.what());
-                });
+            if (auto result = perform_and_check(__PRETTY_FUNCTION__, debug); result.has_exception_set())
+                return {result};
+            else if (!result)
                 cummulated_time += 3600;
-                continue;
-            }
-            
-            if (auto response_code = easy_ref.get_response_code(); response_code != 200) {
-                if (debug)
-                    std::fprintf(stderr, "Get request to %s returned %ld\n", 
-                                 easy_ref.getinfo_effective_url(), response_code);
-                cummulated_time += 3600;
-                continue;
-            }
-
-            cummulated_time += easy_ref.getinfo_transfer_time();
+            else
+                cummulated_time += easy_ref.getinfo_transfer_time();
         }
 
         if (cummulated_time < lowest_latency) {

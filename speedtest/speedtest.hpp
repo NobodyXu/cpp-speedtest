@@ -142,6 +142,13 @@ public:
 
         auto get_easy_ref() noexcept -> curl::Easy_ref_t;
 
+        /**
+         * perform the transfer, check return value of perform and check response code.
+         * 
+         * @return true if perform succeeds and response code == 200, false if otherwise.
+         */
+        auto perform_and_check(const char *fname, bool debug) noexcept -> Ret_except<bool, std::bad_alloc>;
+
     public:
         using Server_id = long;
 
