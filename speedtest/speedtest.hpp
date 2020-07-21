@@ -344,14 +344,15 @@ public:
 
         /**
          * @pre candidates.servers.size() != 0
-         * @return lists of server that has the lowest latency
+         * @return lists of server that has the lowest latency and 
+         *         the lowest latency in ms.
          *
          * get_best_server will test every candidates.closest_servers
          * and returns the one with lowest average transfer time for fixed
          * amount of data.
          */
         auto get_best_server(Candidate_servers &candidates, bool debug = false) noexcept ->
-            Ret_except<std::vector<Server_id>, std::bad_alloc>;
+            Ret_except<std::pair<std::vector<Server_id>, std::size_t>, std::bad_alloc>;
     };
 
     ;

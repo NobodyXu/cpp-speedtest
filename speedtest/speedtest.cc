@@ -445,7 +445,7 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
 }
 
 auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debug) noexcept ->
-    Ret_except<std::vector<Server_id>, std::bad_alloc>
+        Ret_except<std::pair<std::vector<Server_id>, std::size_t>, std::bad_alloc>
 {
     if (!easy) {
         easy = speedtest.create_easy();
@@ -453,8 +453,6 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
             return {std::bad_alloc{}};
     }
     auto easy_ref = curl::Easy_ref_t{easy.get()};
-
-    std::vector<Server_id> best_servers;
 
     static constexpr const auto *query_prefix = "/latency.txt?x=";
 
@@ -476,8 +474,24 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
     // Would be used to reset built_url.
     const auto prefix_size = built_url.size();
 
-    ;
+    std::pair<std::vector<Server_id>, std::size_t> ret;
+    auto &best_servers = ret.first;
+    auto &lowest_latency = ret.second;
 
-    return std::move(best_servers);
+    lowest_latency = std::numeric_limits<std::size_t>::max();
+
+    for (const auto &server_id: candidates.closest_servers) {
+        const auto it = candidates.servers.find(server_id);
+        if (it == candidates.servers.end()) {
+            if (debug)
+                std::fprintf(stderr, "Can't find server with id = %ld\n", server_id);
+            continue;
+        }
+        const auto &server = it->second;
+
+        ;
+    }
+
+    return std::move(ret);
 }
 } /* namespace speedtest */
