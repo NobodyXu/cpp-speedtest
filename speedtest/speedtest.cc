@@ -4,10 +4,12 @@
 #include "../utils/strncpy.hpp"
 #include "../utils/affix.hpp"
 #include "../utils/geo_distance.hpp"
+#include "../utils/get_unix_timestamp_ms.hpp"
 
 #include <cerrno>
 #include <cassert>
 #include <cstdio>
+#include <cinttypes>
 
 #include <cstdint>
 
@@ -426,6 +428,10 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
     return candidates;
 }
 
+static std::size_t null_writeback(char*, std::size_t, std::size_t size, void*) noexcept
+{
+    return size;
+}
 auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debug) noexcept ->
         Ret_except<std::pair<std::vector<Server_id>, std::size_t>, std::bad_alloc>
 {
@@ -438,7 +444,7 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
 
     static constexpr const std::string_view query_prefix = "/latency.txt?x=";
     // the 20-byte is for the unix timestamp in ms.
-    char unix_timestamp_ms[20];
+    char unix_timestamp_ms[21];
 
     // The longest element of servers I observed is 69-byte long
     speedtest.reserve_built_url(69 + query_prefix.size() + sizeof(unix_timestamp_ms));
@@ -456,9 +462,52 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
                 std::fprintf(stderr, "Can't find server with id = %ld\n", server_id);
             continue;
         }
-        const auto &server = it->second;
+        const auto &url = it->second.url;
 
-        ;
+        static constexpr const auto &common_pattern = Candidate_servers::Server::common_pattern;
+        if (!url) {
+            if (debug)
+                std::fprintf(stderr, "server with i = %ld have url == nullptr\n", server_id);
+            continue;
+        }
+        if (url[0] == 0 || url[0] > 2) {
+            if (debug)
+                std::fprintf(stderr, "server with i = %ld have url[0] not in [1, 2], but have %d\n", 
+                             server_id, int(url[0]));
+            continue;
+        }
+
+        easy_ref.set_writeback(null_writeback, nullptr);
+
+        for (char i = 0; i != 3; ++i) {
+            using utils::get_unix_timestamp_ms;
+            std::snprintf(unix_timestamp_ms, sizeof(unix_timestamp_ms), "%" PRIu64 "", get_unix_timestamp_ms());
+
+            {
+                auto result = [&]() noexcept
+                {
+                    if (url[0] == 1)
+                        return speedtest.set_url(easy_ref, {
+                            std::string_view{url.get() + 1},
+                            query_prefix, 
+                            std::string_view(unix_timestamp_ms)
+                        });
+                    else
+                        return speedtest.set_url(easy_ref, {
+                            std::string_view{url.get() + 1}, 
+                            common_pattern,
+                            query_prefix, 
+                            std::string_view(unix_timestamp_ms)
+                        });
+                }();
+
+                if (result.has_exception_set())
+                    return {result};
+            }
+        }
+
+
+        utils::get_unix_timestamp_ms();
     }
 
     return std::move(ret);
