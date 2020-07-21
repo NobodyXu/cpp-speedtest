@@ -91,7 +91,7 @@ protected:
     /**
      * Reserve additional len for built_url.
      */
-    auto reserve_built_url(std::size_t len) noexcept;
+    void reserve_built_url(std::size_t len) noexcept;
 
 public:
     /**

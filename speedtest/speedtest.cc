@@ -120,7 +120,7 @@ auto Speedtest::set_url(curl::Easy_ref_t easy_ref, std::initializer_list<std::st
     else
         return {};
 }
-auto Speedtest::reserve_built_url(std::size_t len) noexcept
+void Speedtest::reserve_built_url(std::size_t len) noexcept
 {
     auto original_size = built_url.size();
 
