@@ -58,6 +58,22 @@ Speedtest::Speedtest(const ShutdownEvent &shutdown_event,
     built_url.append("://");
 }
 
+bool Speedtest::check_libcurl_support(FILE *stderr_stream) const noexcept
+{
+    auto printer = [&](const char *msg) noexcept
+    {
+        if (stderr_stream)
+            std::fputs(msg, stderr_stream);
+    };
+
+    if (!curl.has_protocol("http")) {
+        printer("Protocol http not supported");
+        return false;
+    }
+
+    return true;
+}
+
 auto Speedtest::create_easy() noexcept -> curl::Easy_t
 {
     auto easy = curl.create_easy();

@@ -12,6 +12,7 @@
 
 # include <stdexcept>
 # include <utility>
+# include <cstdio>
 
 # include <memory>
 
@@ -115,6 +116,14 @@ public:
               const char *useragent = default_useragent,
               unsigned long timeout = 0,
               const char *source_addr = nullptr) noexcept;
+
+    /**
+     * @param stderr_stream if not null, will print message
+     *                      about what feature isn't supported to it.
+     * @return true  if speedtest can run on this libcurl
+     *         false if not.
+     */
+    bool check_libcurl_support(FILE *stderr_stream) const noexcept;
 
     /**
      * @warning all functions is this class is not thread-safe.
