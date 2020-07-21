@@ -87,14 +87,18 @@ static auto xml2geoposition(pugi::xml_node &xml_node)
     return position;
 }
 
+auto Speedtest::Config::get_easy_ref() noexcept -> curl::Easy_ref_t
+{
+    if (!easy)
+        easy = speedtest.create_easy();
+    return {easy.get()};
+}
+
 auto Speedtest::Config::get_config() noexcept -> Ret
 {
-    if (!easy) {
-        easy = speedtest.create_easy();
-        if (!easy)
-            return {std::bad_alloc{}};
-    }
-    auto easy_ref = curl::Easy_ref_t{easy.get()};
+    auto easy_ref = get_easy_ref();
+    if (!easy_ref.curl_easy)
+        return {std::bad_alloc{}};
 
     speedtest.set_url(easy_ref, {"www.speedtest.net/speedtest-config.php"});
 
@@ -187,12 +191,9 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                                     bool debug) noexcept ->
     Ret_except<Candidate_servers, std::bad_alloc>
 {
-    if (!easy) {
-        easy = speedtest.create_easy();
-        if (!easy)
-            return {std::bad_alloc{}};
-    }
-    auto easy_ref = curl::Easy_ref_t{easy.get()};
+    auto easy_ref = get_easy_ref();
+    if (!easy_ref.curl_easy)
+        return {std::bad_alloc{}};
 
     // Built query
     // ?threads=number
@@ -340,12 +341,9 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
 auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debug) noexcept ->
         Ret_except<std::pair<std::vector<Server_id>, std::size_t>, std::bad_alloc>
 {
-    if (!easy) {
-        easy = speedtest.create_easy();
-        if (!easy)
-            return {std::bad_alloc{}};
-    }
-    auto easy_ref = curl::Easy_ref_t{easy.get()};
+    auto easy_ref = get_easy_ref();
+    if (!easy_ref.curl_easy)
+        return {std::bad_alloc{}};
 
     static constexpr const std::string_view query_prefix = "/latency.txt?x=";
     // the 20-byte is for the unix timestamp in ms.

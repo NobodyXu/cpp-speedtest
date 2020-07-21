@@ -140,6 +140,8 @@ public:
         curl::Easy_t easy;
         std::string response;
 
+        auto get_easy_ref() noexcept -> curl::Easy_ref_t;
+
     public:
         using Server_id = long;
 
