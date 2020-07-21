@@ -140,6 +140,11 @@ public:
         curl::Easy_t easy;
         std::string response;
 
+        /**
+         * Call speedtest.create_easy and return easy_ref
+         * @return curl::Easy_ref_t::curl_easy can be nullptr, which in turn
+         *         notify std::bad_alloc event.
+         */
         auto get_easy_ref() noexcept -> curl::Easy_ref_t;
 
         /**
