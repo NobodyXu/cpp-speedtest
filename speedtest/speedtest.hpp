@@ -105,16 +105,6 @@ protected:
 
     static std::size_t null_writeback(char*, std::size_t, std::size_t size, void*) noexcept;
 
-    /**
-     * If speedtest is going to ignore errors, use this function to optionally print them.
-     */
-    void error(const char *fmt, ...) noexcept;
-
-    /**
-     * Use this to debug speedtest logic.
-     */
-    void debug(const char *fmt, ...) noexcept;
-
 public:
     /**
      * @param timeout in milliseconds. Set to 0 to disable (default);
@@ -140,6 +130,14 @@ public:
               const char *source_addr = nullptr) noexcept;
 
     /**
+     * @param stderr_stream if not null, will print message
+     *                      about what feature isn't supported to it.
+     * @return true  if speedtest can run on this libcurl
+     *         false if not.
+     */
+    bool check_libcurl_support(FILE *stderr_stream) const noexcept;
+
+    /**
      * Set level to Verbose_level::none or set stderr_stream to nullptr
      * to disable verbose mode.
      *
@@ -150,12 +148,14 @@ public:
     void enable_verbose(Verbose_level level, FILE *stderr_stream) noexcept;
 
     /**
-     * @param stderr_stream if not null, will print message
-     *                      about what feature isn't supported to it.
-     * @return true  if speedtest can run on this libcurl
-     *         false if not.
+     * If speedtest is going to ignore errors, use this function to optionally print them.
      */
-    bool check_libcurl_support(FILE *stderr_stream) const noexcept;
+    void error(const char *fmt, ...) noexcept;
+
+    /**
+     * Use this to debug speedtest logic.
+     */
+    void debug(const char *fmt, ...) noexcept;
 
     /**
      * @warning all functions is this class is not thread-safe.
