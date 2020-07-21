@@ -10,7 +10,6 @@
 #include "../utils/get_unix_timestamp_ms.hpp"
 
 #include <cerrno>
-#include <cassert>
 
 #include <cstdint>
 
@@ -223,8 +222,6 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
     // ?threads=number
     char query_buf[9 + 10 + 1];
     auto query_sz = std::snprintf(query_buf, sizeof(query_buf), "?threads=%u", threads.download);
-    assert(query_sz > 0);
-    assert(query_sz < sizeof(query_buf)); // ret value excludes null byte
 
     std::string_view query = query_buf;
 
