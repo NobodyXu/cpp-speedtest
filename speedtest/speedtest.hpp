@@ -72,7 +72,7 @@ protected:
     const ShutdownEvent &shutdown_event;
 
     unsigned long timeout = 0;
-    const char *ip_addr = nullptr;
+    const char *ip_addr;
     const char *useragent = default_useragent;
 
     std::string built_url;
@@ -94,31 +94,25 @@ protected:
 
 public:
     /**
+     * @param timeout in milliseconds. Set to 0 to disable (default);
+     *                should be less than std::numeric_limits<long>::max().
+     * @param ip_addr ipv4/ipv6 address
+     *                Set to nullptr to use whatever TCP stack see fits.
+     *
      * If libcurl is already initialized, but SSL is not initialized
      * and one of the speedtest url happen to be https, then
      * it will be a fatal error, so please initialize libcurl with ALL features.
      *
      * **If initialization of libcurl fails due to whatever reason,
      * err is called to print msg and terminate the program.**
-     */
-    Speedtest(const ShutdownEvent &shutdown_event, bool secure = false) noexcept;
-
-    /**
-     * By default, useragent is set to default_useragent
-     */
-    void set_useragent(const char *useragent_arg) noexcept;
-    /**
-     * @param timeout in milliseconds. Set to 0 to disable (default);
-     *                should be less than std::numeric_limits<long>::max().
+     *
      * @warning not thread safe
      */
-    void set_timeout(unsigned long timeout_arg) noexcept;
-    /**
-     * @param ip_addr ipv4/ipv6 address
-     *                Set to nullptr to use whatever TCP stack see fits (default).
-     * @warning not thread safe
-     */
-    void set_source_addr(const char *source_addr) noexcept;
+    Speedtest(const ShutdownEvent &shutdown_event, 
+              bool secure = false,
+              const char *useragent = default_useragent,
+              unsigned long timeout = 0,
+              const char *source_addr = nullptr) noexcept;
 
     /**
      * @warning all functions is this class is not thread-safe.

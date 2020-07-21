@@ -39,27 +39,23 @@ bool FakeShutdownEvent::has_event() const noexcept
     return false;
 }
 
-Speedtest::Speedtest(const ShutdownEvent &shutdown_event, bool secure) noexcept:
+Speedtest::Speedtest(const ShutdownEvent &shutdown_event, 
+                     bool secure,
+                     const char *useragent,
+                     unsigned long timeout,
+                     const char *source_addr) noexcept:
     curl{nullptr},
     shutdown_event{shutdown_event},
+
+    timeout{timeout},
+    ip_addr{source_addr},
+    useragent{useragent},
+
     built_url("http")
 {
     if (secure)
         built_url += 's';
     built_url.append("://");
-}
-
-void Speedtest::set_useragent(const char *useragent_arg) noexcept
-{
-    useragent = useragent_arg;
-}
-void Speedtest::set_timeout(unsigned long timeout_arg) noexcept
-{
-    timeout = timeout_arg;
-}
-void Speedtest::set_source_addr(const char *source_addr) noexcept
-{
-    ip_addr = source_addr;
 }
 
 auto Speedtest::create_easy() noexcept -> curl::Easy_t
