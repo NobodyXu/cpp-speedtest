@@ -404,10 +404,13 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
 
             if (auto result = perform_and_check(__PRETTY_FUNCTION__); result.has_exception_set())
                 return {result};
-            else if (!result)
+            else if (result) {
+                auto transfer_time = easy_ref.getinfo_transfer_time();
+                speedtest.debug("In %s, %d loop for %s, transfer_time = %zu\n",
+                                __PRETTY_FUNCTION__, int{i}, easy_ref.getinfo_effective_url(), transfer_time);
+                cummulated_time += transfer_time;
+            } else
                 cummulated_time += 3600;
-            else
-                cummulated_time += easy_ref.getinfo_transfer_time();
         }
 
         if (cummulated_time < lowest_latency) {
