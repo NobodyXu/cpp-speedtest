@@ -101,7 +101,9 @@ public:
      *
      * If libcurl is already initialized, but SSL is not initialized
      * and one of the speedtest url happen to be https, then
-     * it will be a fatal error, so please initialize libcurl with ALL features.
+     * it will be a fatal error, so 
+     * <br>**if you use libcurl at somewhere else in your program, please
+     * initialize it to use ALL FEATURES**.
      *
      * **If initialization of libcurl fails due to whatever reason,
      * err is called to print msg and terminate the program.**
