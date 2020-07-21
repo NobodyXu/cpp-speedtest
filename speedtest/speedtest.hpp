@@ -73,21 +73,24 @@ protected:
 
     unsigned long timeout = 0;
     const char *ip_addr = nullptr;
-    bool secure = false;
     const char *useragent = default_useragent;
 
-    std::string buffer;
+    std::string built_url;
 
     auto create_easy() noexcept -> curl::Easy_t;
 
     /**
      * @param url will be dupped thus can be freed after this call.
-     *            <br>Have to be in format protocol://... or ://...;
-     *            Protocol has to be either http or https.
+     *            <br>Have to be in format hostname:port/path?query. 
      *            <br>Otherwise, it is UNDEFINED BEHAVIOR.
      */
-    auto set_url(curl::Easy_ref_t easy_ref, const char *url) noexcept -> 
+    auto set_url(curl::Easy_ref_t easy_ref, std::initializer_list<std::string_view> parts) noexcept -> 
         Ret_except<void, std::bad_alloc>;
+
+    /**
+     * Reserve additional len for built_url.
+     */
+    auto reserve_built_url(std::size_t len) noexcept;
 
 public:
     /**
@@ -98,12 +101,8 @@ public:
      * **If initialization of libcurl fails due to whatever reason,
      * err is called to print msg and terminate the program.**
      */
-    Speedtest(const ShutdownEvent &shutdown_event) noexcept;
+    Speedtest(const ShutdownEvent &shutdown_event, bool secure = false) noexcept;
 
-    /**
-     * By default, secure == false
-     */
-    void set_secure(bool secure_arg) noexcept;
     /**
      * By default, useragent is set to default_useragent
      */

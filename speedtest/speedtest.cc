@@ -39,15 +39,16 @@ bool FakeShutdownEvent::has_event() const noexcept
     return false;
 }
 
-Speedtest::Speedtest(const ShutdownEvent &shutdown_event) noexcept:
+Speedtest::Speedtest(const ShutdownEvent &shutdown_event, bool secure) noexcept:
     curl{nullptr},
-    shutdown_event{shutdown_event}
-{}
-
-void Speedtest::set_secure(bool secure_arg) noexcept
+    shutdown_event{shutdown_event},
+    built_url("http")
 {
-    secure = secure_arg;
+    if (secure)
+        built_url += 's';
+    built_url.append("://");
 }
+
 void Speedtest::set_useragent(const char *useragent_arg) noexcept
 {
     useragent = useragent_arg;
@@ -88,44 +89,28 @@ auto Speedtest::create_easy() noexcept -> curl::Easy_t
 
     return {std::move(easy)};
 }
-auto Speedtest::set_url(curl::Easy_ref_t easy_ref, const char *url) noexcept -> 
+
+auto Speedtest::set_url(curl::Easy_ref_t easy_ref, std::initializer_list<std::string_view> parts) noexcept -> 
     Ret_except<void, std::bad_alloc>
 {
-    auto *sep = std::strchr(url, ':');
+    auto original_size = built_url.size();
 
-    if (!(secure && sep - url == 5) && !(!secure && sep - url == 4)) {
-        buffer.clear();
+    for (const auto &part: parts)
+        built_url.append(part);
 
-        buffer.append("http");
-        if (secure)
-            buffer.push_back('s');
-        buffer.append(sep);
+    auto result = easy_ref.set_url(built_url.c_str());
 
-        url = buffer.c_str();
-    }
-
-    auto result = easy_ref.set_url(url);
+    built_url.resize(original_size);
     if (result.has_exception_set())
         return {result};
-
-    return {};
+    else
+        return {};
 }
-auto Speedtest::set_url(curl::Easy_ref_t easy_ref, std::string &url) const noexcept -> 
-    Ret_except<void, std::bad_alloc>
+auto Speedtest::reserve_built_url(std::size_t len) noexcept
 {
-    const char *url_str = url.c_str();
+    auto original_size = built_url.size();
 
-    if (!secure) {
-        // The following line requies CharT* data() noexcept; (Since C++17)
-        std::memcpy(url.data() + 1, "http", 4);
-        ++url_str;
-    }
-
-    auto result = easy_ref.set_url(url_str);
-    if (result.has_exception_set())
-        return {result};
-
-    return {};
+    built_url.reserve(original_size + len);
 }
 
 Speedtest::Config::Config(Speedtest &speedtest_arg) noexcept:
@@ -188,7 +173,7 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     }
     auto easy_ref = curl::Easy_ref_t{easy.get()};
 
-    speedtest.set_url(easy_ref, "://www.speedtest.net/speedtest-config.php");
+    speedtest.set_url(easy_ref, {"www.speedtest.net/speedtest-config.php"});
 
     std::string response;
     easy_ref.set_readall_writeback(response);
@@ -288,27 +273,15 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
 
     // Built query
     // ?threads=number
-    char query[9 + 10 + 1];
-    auto query_sz = std::snprintf(query, sizeof(query), "?threads=%u", threads.download);
+    char query_buf[9 + 10 + 1];
+    auto query_sz = std::snprintf(query_buf, sizeof(query_buf), "?threads=%u", threads.download);
     assert(query_sz > 0);
-    assert(query_sz < sizeof(query)); // ret value excludes null byte
+    assert(query_sz < sizeof(query_buf)); // ret value excludes null byte
 
-    std::string built_url;
-    /**
-     * The longest element of server_list_urls is 49-byte long, 
-     * protocol takes 5 or 4 bytes + 3, depending on whether it is http or https,
-     * and the query takes at most sizeof(query).
-     */
-    built_url.reserve(4 + std::size_t(speedtest.secure) + 3 + 49 + sizeof(query));
+    std::string_view query = query_buf;
 
-    built_url.append("http");
-    if (speedtest.secure)
-        built_url += 's';
-    built_url.append("://");
-
-    // size of protocol prefix.
-    // Would be used to reset built_url.
-    const auto prefix_size = built_url.size();
+    // The longest element of server_list_urls is 49-byte long.
+    speedtest.reserve_built_url(49 + query.size());
 
     Candidate_servers candidates;
 
@@ -320,11 +293,8 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
     response.reserve(222000);
 
     for (std::size_t i = 0; urls[i] != nullptr; ++i) {
-        built_url.resize(prefix_size);
-        built_url.append(urls[i]).append(query, query_sz);
-
         {
-            auto result = easy_ref.set_url(built_url.c_str());
+            auto result = speedtest.set_url(easy_ref, {urls[i], query});
             if (result.has_exception_set())
                 return {result};
         }
@@ -342,7 +312,7 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                 {
                     if (debug)
                         std::fprintf(stderr, "Catched exception in %s when getting %s: e.what() = %s\n",
-                                     __PRETTY_FUNCTION__, built_url.c_str(), e.what());
+                                     __PRETTY_FUNCTION__, easy_ref.getinfo_effective_url(), e.what());
                 });
                 continue;
             }
@@ -351,7 +321,8 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
         auto response_code = easy_ref.get_response_code();
         if (response_code != 200) {
             if (debug)
-                std::fprintf(stderr, "Get request to %s returned %ld\n", built_url.c_str(), response_code);
+                std::fprintf(stderr, "Get request to %s returned %ld\n", 
+                             easy_ref.getinfo_effective_url(), response_code);
             continue;
         }
 
@@ -362,7 +333,7 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
             if (!result) {
                 if (debug) {
                     std::fprintf(stderr, "pugixml failed to parse xml retrieved from %s: %s\n",
-                                 built_url.c_str(), result.description());
+                                 easy_ref.getinfo_effective_url(), result.description());
                 }
                 continue;
             }
@@ -454,25 +425,12 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
     }
     auto easy_ref = curl::Easy_ref_t{easy.get()};
 
-    static constexpr const auto *query_prefix = "/latency.txt?x=";
+    static constexpr const std::string_view query_prefix = "/latency.txt?x=";
+    // the 20-byte is for the unix timestamp in ms.
+    char unix_timestamp_ms[20];
 
-    std::string built_url;
-    /**
-     * The longest element of servers I observed is 69-byte long, 
-     * protocol takes 5 or 4 bytes, depending on whether it is http or https,
-     * the query_prefix takes sizeof(query_prefix) and at most 20 bytes
-     * for the unix timestamp.
-     */
-    built_url.reserve(4 + std::size_t(speedtest.secure) + 3 + 69 + sizeof(query_prefix) + 20);
-
-    built_url.append("http");
-    if (speedtest.secure)
-        built_url += 's';
-    built_url.append("://");
-
-    // size of protocol prefix.
-    // Would be used to reset built_url.
-    const auto prefix_size = built_url.size();
+    // The longest element of servers I observed is 69-byte long
+    speedtest.reserve_built_url(69 + query_prefix.size() + sizeof(unix_timestamp_ms));
 
     std::pair<std::vector<Server_id>, std::size_t> ret;
     auto &best_servers = ret.first;
