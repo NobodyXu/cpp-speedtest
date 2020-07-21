@@ -68,6 +68,13 @@ public:
     static constexpr const auto default_useragent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                                                     "(KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36";
 
+    enum class Verbose_level {
+        none         = 0,
+        error        = 1 << 0, // If speedtest is going to ignore errors, print them.
+        debug        = 1 << 1, // Print speedtest logic
+        verbose_curl = 1 << 2, // Enable curl's verbose mode
+    };
+
 protected:
     curl::curl_t curl;
     const ShutdownEvent &shutdown_event;
@@ -77,6 +84,9 @@ protected:
     const char *useragent = default_useragent;
 
     std::string built_url;
+
+    FILE *stderr_stream = nullptr;
+    Verbose_level verbose_level = Verbose_level::none;
 
     auto create_easy() noexcept -> curl::Easy_t;
 
@@ -94,6 +104,16 @@ protected:
     void reserve_built_url(std::size_t len) noexcept;
 
     static std::size_t null_writeback(char*, std::size_t, std::size_t size, void*) noexcept;
+
+    /**
+     * If speedtest is going to ignore errors, use this function to optionally print them.
+     */
+    void error(const char *fmt, ...) noexcept;
+
+    /**
+     * Use this to debug speedtest logic.
+     */
+    void debug(const char *fmt, ...) noexcept;
 
 public:
     /**
@@ -118,6 +138,16 @@ public:
               const char *useragent = default_useragent,
               unsigned long timeout = 0,
               const char *source_addr = nullptr) noexcept;
+
+    /**
+     * Set level to Verbose_level::none or set stderr_stream to nullptr
+     * to disable verbose mode.
+     *
+     * verbose mode is disabled by default.
+     *
+     * @param level or-ed value of Verbose_level
+     */
+    void enable_verbose(Verbose_level level, FILE *stderr_stream) noexcept;
 
     /**
      * @param stderr_stream if not null, will print message

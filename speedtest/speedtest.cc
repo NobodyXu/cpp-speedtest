@@ -3,6 +3,7 @@
 #include "../curl-cpp/curl.hpp"
 
 #include <cstdio>
+#include <cstdarg>
 
 namespace speedtest {
 bool FakeShutdownEvent::has_event() const noexcept
@@ -43,6 +44,30 @@ bool Speedtest::check_libcurl_support(FILE *stderr_stream) const noexcept
     }
 
     return true;
+}
+
+void Speedtest::enable_verbose(Verbose_level level, FILE *stderr_stream) noexcept
+{
+    this->verbose_level = level;
+    this->stderr_stream = stderr_stream;
+}
+void Speedtest::error(const char *fmt, ...) noexcept
+{
+    if (verbose_level == Verbose_level::error && stderr_stream != nullptr) {
+        va_list ap;
+        va_start(ap, fmt);
+        std::vfprintf(stderr_stream, fmt, ap);
+        va_end(ap);
+    }
+}
+void Speedtest::debug(const char *fmt, ...) noexcept
+{
+    if (verbose_level == Verbose_level::debug && stderr_stream != nullptr) {
+        va_list ap;
+        va_start(ap, fmt);
+        std::vfprintf(stderr_stream, fmt, ap);
+        va_end(ap);
+    }
 }
 
 auto Speedtest::create_easy() noexcept -> curl::Easy_t
