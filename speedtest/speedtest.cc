@@ -479,6 +479,10 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
 
         easy_ref.set_writeback(null_writeback, nullptr);
 
+        // Disable all compression methods.
+        if (auto result = easy_ref.set_encoding(nullptr); result.has_exception_set())
+            return {result};
+
         std::size_t cummulated_time = 0;
         for (char i = 0; i != 3; ++i) {
             using utils::get_unix_timestamp_ms;
