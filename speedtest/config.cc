@@ -337,10 +337,6 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
     return candidates;
 }
 
-static std::size_t null_writeback(char*, std::size_t, std::size_t size, void*) noexcept
-{
-    return size;
-}
 auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debug) noexcept ->
         Ret_except<std::pair<std::vector<Server_id>, std::size_t>, std::bad_alloc>
 {
@@ -386,7 +382,7 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
             continue;
         }
 
-        easy_ref.set_writeback(null_writeback, nullptr);
+        easy_ref.set_writeback(Speedtest::null_writeback, nullptr);
 
         // Disable all compression methods.
         if (auto result = easy_ref.set_encoding(nullptr); result.has_exception_set())

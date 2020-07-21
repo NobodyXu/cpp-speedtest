@@ -95,5 +95,9 @@ void Speedtest::reserve_built_url(std::size_t len) noexcept
 
     built_url.reserve(original_size + len);
 }
+std::size_t Speedtest::null_writeback(char*, std::size_t, std::size_t size, void*) noexcept
+{
+    return size;
+}
 
 } /* namespace speedtest */

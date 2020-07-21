@@ -93,6 +93,8 @@ protected:
      */
     void reserve_built_url(std::size_t len) noexcept;
 
+    static std::size_t null_writeback(char*, std::size_t, std::size_t size, void*) noexcept;
+
 public:
     /**
      * @param timeout in milliseconds. Set to 0 to disable (default);
