@@ -479,6 +479,7 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
 
         easy_ref.set_writeback(null_writeback, nullptr);
 
+        std::size_t cummulated_time = 0;
         for (char i = 0; i != 3; ++i) {
             using utils::get_unix_timestamp_ms;
             std::snprintf(unix_timestamp_ms, sizeof(unix_timestamp_ms), "%" PRIu64 "", get_unix_timestamp_ms());
@@ -504,10 +505,43 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates, bool debu
                 if (result.has_exception_set())
                     return {result};
             }
+
+            {
+                auto result = easy_ref.perform();
+                if (result.has_exception_set()) {
+                    if (result.has_exception_type<std::bad_alloc>())
+                        return {result};
+
+                    result.Catch([&](const auto &e) noexcept
+                    {
+                        if (debug)
+                            std::fprintf(stderr, "Catched exception in %s when getting %s: e.what() = %s\n",
+                                         __PRETTY_FUNCTION__, easy_ref.getinfo_effective_url(), e.what());
+                    });
+                    cummulated_time += 3600;
+                    continue;
+                }
+                
+                auto response_code = easy_ref.get_response_code();
+                if (response_code != 200) {
+                    if (debug)
+                        std::fprintf(stderr, "Get request to %s returned %ld\n", 
+                                     easy_ref.getinfo_effective_url(), response_code);
+                    cummulated_time += 3600;
+                    continue;
+                }
+            }
+
+            cummulated_time += easy_ref.getinfo_transfer_time();
         }
 
+        if (cummulated_time < lowest_latency) {
+            lowest_latency = cummulated_time;
+            best_servers.clear();
+        }
 
-        utils::get_unix_timestamp_ms();
+        if (cummulated_time == lowest_latency)
+            best_servers.emplace_back(server_id);
     }
 
     return std::move(ret);
