@@ -341,6 +341,8 @@ public:
 
         /**
          * @pre candidates.servers.size() != 0
+         * @post after this function call, get_config and get_servers must not be
+         *       called on this object again.
          * @return lists of server that has the lowest latency and 
          *         the lowest latency in ms.
          *
