@@ -127,6 +127,7 @@ public:
     protected:
         Speedtest &speedtest;
         curl::Easy_t easy;
+        std::string response;
 
     public:
         using Server_id = long;

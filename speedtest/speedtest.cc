@@ -171,7 +171,7 @@ auto Speedtest::Config::get_config() noexcept -> Ret
 
     speedtest.set_url(easy_ref, {"www.speedtest.net/speedtest-config.php"});
 
-    std::string response;
+    response.clear();
     easy_ref.set_readall_writeback(response);
 
     /**
@@ -281,7 +281,6 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
 
     Candidate_servers candidates;
 
-    std::string response;
     /**
      * On my machine, the maximum response I get from server_list_urls
      * with '?thread=4' is 221658, thus reserve 222000.
