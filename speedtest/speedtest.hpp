@@ -356,8 +356,8 @@ public:
         };
 
         /**
-         * @param servers_arg servers to be used.
-         * @param exclude servers to be excluded.
+         * @param servers_include servers to be used.
+         * @param servers_exclude servers to be excluded.
          * @param urls the last url must be nullptr, to signal the end of array.
          *             <br>Should formatted like server_list_urls.
          *
@@ -365,8 +365,8 @@ public:
          *
          * Get list of servers from preconfigured site.
          */
-        auto get_servers(const std::unordered_set<Server_id> &servers, 
-                         const std::unordered_set<Server_id> &exclude, 
+        auto get_servers(const std::unordered_set<Server_id> &servers_include, 
+                         const std::unordered_set<Server_id> &servers_exclude, 
                          const char * const urls[] = server_list_urls) noexcept -> 
             Ret_except<Candidate_servers, std::bad_alloc>;
 

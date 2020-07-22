@@ -205,8 +205,8 @@ auto Speedtest::Config::perform_and_check(const char *fname) noexcept ->
     return true;
 }
 
-auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers_arg, 
-                                    const std::unordered_set<Server_id> &exclude, 
+auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers_include, 
+                                    const std::unordered_set<Server_id> &servers_exclude, 
                                     const char * const urls[]) noexcept ->
     Ret_except<Candidate_servers, std::bad_alloc>
 {
@@ -257,9 +257,9 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
         auto servers_xml = doc.child("settings").child("servers");
         for (auto &&server_xml: servers_xml.children("server")) {
             auto server_id = server_xml.attribute("id").as_llong();
-            if (!servers_arg.count(server_id))
+            if (!servers_include.count(server_id))
                 continue;
-            if (exclude.count(server_id))
+            if (!servers_exclude.count(server_id))
                 continue;
             if (ignore_servers.count(server_id))
                 continue;
