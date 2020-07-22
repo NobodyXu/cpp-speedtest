@@ -6,6 +6,7 @@
 #include "../utils/split2int.hpp"
 #include "../utils/strncpy.hpp"
 #include "../utils/affix.hpp"
+#include "../utils/dirname.hpp"
 #include "../utils/geo_distance.hpp"
 #include "../utils/get_unix_timestamp_ms.hpp"
 
@@ -352,15 +353,12 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
         auto &built_url = speedtest.built_url;
         auto original_sz = built_url.size();
 
-        std::string_view url_sv{url.get() + 1};
-        if (url[0] == 1) {
-            // os.path.dirname(url)
-            auto last_slash = std::strrchr(url_sv.data(), '/');
-            url_sv.substr(0, last_slash - url_sv.data());
-        }
-        built_url.append(url_sv);
-        if (url[0] == 2)
+        if (url[0] == 1)
+            built_url.append(utils::dirname(url.get() + 1));
+        else {
+            built_url.append(url.get() + 1);
             built_url.append(common_pattern.substr(0, 15));
+        }
 
         built_url.append(query_prefix);
         built_url.append(url_params);
