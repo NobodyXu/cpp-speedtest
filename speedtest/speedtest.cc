@@ -5,6 +5,8 @@
 #include <cstdio>
 #include <cstdarg>
 
+#include <type_traits>
+
 namespace speedtest {
 Speedtest::Speedtest(const utils::ShutdownEvent &shutdown_event, 
                      bool secure,
@@ -41,10 +43,19 @@ bool Speedtest::check_libcurl_support(FILE *stderr_stream) const noexcept
     return true;
 }
 
+bool operator & (Speedtest::Verbose_level x, Speedtest::Verbose_level y) noexcept
+{
+    using type = std::underlying_type_t<Speedtest::Verbose_level>;
+    
+    return static_cast<type>(x) & static_cast<type>(y);
+}
 void Speedtest::enable_verbose(Verbose_level level, FILE *stderr_stream) noexcept
 {
     this->verbose_level = level;
     this->stderr_stream = stderr_stream;
+
+    if (verbose_level & Verbose_level::verbose_curl && stderr_stream != nullptr)
+        curl.stderr_stream = stderr_stream;
 }
 void Speedtest::error(const char *fmt, ...) noexcept
 {
