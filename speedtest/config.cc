@@ -69,13 +69,17 @@ std::size_t Speedtest::Config::Candidate_servers::string_hash::operator () (cons
 }
 
 Speedtest::Config::Candidate_servers::Server::Server(std::unique_ptr<char[]> &&url, 
-                                                     const char *name, 
+                                                     std::string &&server_name, 
+                                                     std::string &&sponsor_name, 
                                                      GeoPosition pos, 
-                                                     const char *sponsor) noexcept:
+                                                     std::string &&country_name) noexcept:
     url{std::move(url)},
-    name{name},
+
+    server_name{std::move(server_name)},
+    sponsor_name{std::move(sponsor_name)},
+
     position{pos},
-    sponsor{sponsor}
+    country_name{std::move(country_name)}
 {}
 
 static auto xml2geoposition(pugi::xml_node &xml_node)
@@ -266,27 +270,6 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
             if (candidates.servers.count(server_id))
                 continue;
 
-            auto position = xml2geoposition(server_xml);
-            if (!candidates.server_geolocations.count(position)) {
-                auto it = candidates.server_geolocations.emplace().first;
-                utils::strncpy(it->second, server_xml.attribute("country").value());
-            }
-
-            auto store_attr = [&](const char *attr_name, auto &c)
-            {
-                Candidate_servers::string attr_val;
-                utils::strncpy(attr_val, server_xml.attribute(attr_name).value());
-
-                auto it = c.find(attr_val);
-                if (it == c.end())
-                    it = c.emplace(attr_val).first;
-
-                return it->data();
-            };
-
-            const char *name = store_attr("name", candidates.server_names);
-            const char *sponsor = store_attr("sponsor", candidates.server_sponsors);
-
             static constexpr const auto &common_pattern = Candidate_servers::Server::common_pattern;
             std::string_view url = server_xml.attribute("url").value();
 
@@ -308,7 +291,14 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
             url_ptr[0] = char{is_common_pattern} + 1;
             utils::strncpy(url_ptr.get() + 1, url.size() + 1, url.data());
 
-            candidates.servers.try_emplace(server_id, std::move(url_ptr), name, position, sponsor);
+            auto position = xml2geoposition(server_xml);
+
+            candidates.servers.try_emplace(server_id, 
+                                           std::move(url_ptr), 
+                                           server_xml.attribute("name").value(),
+                                           server_xml.attribute("sponsor").value(),
+                                           position, 
+                                           server_xml.attribute("country").value());
 
             auto d = utils::geo_distance(position.lat, position.lon, 
                                          client.geolocation.position.lat, client.geolocation.position.lon);
