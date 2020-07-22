@@ -33,6 +33,8 @@ public:
     FakeShutdownEvent& operator = (const FakeShutdownEvent&) = default;
     FakeShutdownEvent& operator = (FakeShutdownEvent&&) = default;
 
+    ~FakeShutdownEvent() = default;
+
     bool has_event() const noexcept;
 };
 
