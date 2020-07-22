@@ -164,33 +164,6 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     return curl::Easy_ref_t::code::ok;
 }
 
-auto Speedtest::Config::perform_and_check(const char *fname) noexcept -> 
-    Ret_except<bool, std::bad_alloc>
-{
-    curl::Easy_ref_t easy_ref{easy.get()};
-
-    if (auto result = easy_ref.perform(); result.has_exception_set()) {
-        if (result.has_exception_type<std::bad_alloc>())
-            return {result};
-
-        result.Catch([&](const auto &e) noexcept
-        {
-            auto *type_name = utils::type_name<std::decay_t<decltype(e)>>();
-            speedtest.error("Catched exception %s when getting %s in %s: e.what() = %s\n",
-                            type_name, easy_ref.getinfo_effective_url(), fname, e.what());
-        });
-        return false;
-    }
-    
-    if (auto response_code = easy_ref.get_response_code(); response_code != 200) {
-        speedtest.error("Get request to %s returned %ld in %s\n", 
-                        easy_ref.getinfo_effective_url(), response_code, fname);
-        return false;
-    }
-
-    return true;
-}
-
 auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers_include, 
                                     const std::unordered_set<Server_id> &servers_exclude, 
                                     const char * const urls[]) noexcept ->
@@ -225,7 +198,8 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
 
         response.clear();
 
-        if (auto result = perform_and_check(__PRETTY_FUNCTION__); result.has_exception_set())
+        if (auto result = speedtest.perform_and_check(easy_ref, __PRETTY_FUNCTION__); 
+            result.has_exception_set())
             return {result};
         else if (!result)
             continue;
@@ -372,7 +346,8 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
             if (auto result = easy_ref.set_url(built_url.c_str()); result.has_exception_set())
                 return {result};
 
-            if (auto result = perform_and_check(__PRETTY_FUNCTION__); result.has_exception_set())
+            if (auto result = speedtest.perform_and_check(easy_ref, __PRETTY_FUNCTION__); 
+                result.has_exception_set())
                 return {result};
             else if (result) {
                 auto transfer_time = easy_ref.getinfo_transfer_time();

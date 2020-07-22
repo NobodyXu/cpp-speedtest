@@ -2,6 +2,8 @@
 
 #include "../curl-cpp/curl.hpp"
 
+#include "../utils/type_name.hpp"
+
 #include <cstdio>
 #include <cstdarg>
 
@@ -130,6 +132,30 @@ void Speedtest::reserve_built_url(std::size_t len) noexcept
     auto original_size = built_url.size();
 
     built_url.reserve(original_size + len);
+}
+auto Speedtest::perform_and_check(curl::Easy_ref_t easy_ref, const char *fname) noexcept -> 
+    Ret_except<bool, std::bad_alloc>
+{
+    if (auto result = easy_ref.perform(); result.has_exception_set()) {
+        if (result.has_exception_type<std::bad_alloc>())
+            return {result};
+
+        result.Catch([&](const auto &e) noexcept
+        {
+            auto *type_name = utils::type_name<std::decay_t<decltype(e)>>();
+            error("Catched exception %s when getting %s in %s: e.what() = %s\n",
+                   type_name, easy_ref.getinfo_effective_url(), fname, e.what());
+        });
+        return false;
+    }
+    
+    if (auto response_code = easy_ref.get_response_code(); response_code != 200) {
+        error("Get request to %s returned %ld in %s\n", 
+               easy_ref.getinfo_effective_url(), response_code, fname);
+        return false;
+    }
+
+    return true;
 }
 std::size_t Speedtest::null_writeback(char*, std::size_t, std::size_t size, void*) noexcept
 {
