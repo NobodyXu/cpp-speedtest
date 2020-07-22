@@ -216,9 +216,9 @@ public:
 
             unsigned char upload_start;
 
-            unsigned download[10] = {
-                350, 500, 750, 1000, 1500, 2000, 2500,
-                3000, 3500, 4000,
+            static constexpr const std::array download{
+                350u, 500u, 750u, 1000u, 1500u, 2000u, 2500u,
+                3000u, 3500u, 4000u,
             };
         } sizes;
 
