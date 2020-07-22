@@ -211,7 +211,7 @@ public:
 
         struct Sizes {
             static constexpr const std::array up_sizes{
-                32768, 65536, 131072, 262144, 524288, 1048576, 7340032
+                32768u, 65536u, 131072u, 262144u, 524288u, 1048576u, 7340032u
             };
 
             unsigned char upload_start;
