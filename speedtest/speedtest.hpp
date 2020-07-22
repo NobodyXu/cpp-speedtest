@@ -10,6 +10,8 @@
 # include "../curl-cpp/curl_easy.hpp"
 # include "../curl-cpp/return-exception/ret-exception.hpp"
 
+# include "../utils/ShutdownEvent.hpp"
+
 # include <stdexcept>
 # include <utility>
 # include <cstdio>
@@ -24,37 +26,6 @@
 # include <string_view>
 
 namespace speedtest {
-class ShutdownEvent {
-protected:
-    ShutdownEvent() = default;
-
-    ShutdownEvent(const ShutdownEvent&) = default;
-    ShutdownEvent(ShutdownEvent&&) = default;
-
-    ShutdownEvent& operator = (const ShutdownEvent&) = default;
-    ShutdownEvent& operator = (ShutdownEvent&&) = default;
-
-    ~ShutdownEvent() = default;
-
-public:
-    /**
-     * Has shutdown event happens
-     */
-    virtual bool has_event() const noexcept = 0;
-};
-class FakeShutdownEvent: public ShutdownEvent {
-public:
-    FakeShutdownEvent() = default;
-
-    FakeShutdownEvent(const FakeShutdownEvent&) = default;
-    FakeShutdownEvent(FakeShutdownEvent&&) = default;
-
-    FakeShutdownEvent& operator = (const FakeShutdownEvent&) = default;
-    FakeShutdownEvent& operator = (FakeShutdownEvent&&) = default;
-
-    bool has_event() const noexcept;
-};
-
 /**
  * @warning ctor and dtor of this object should be ran when
  *          only one thread is present.
@@ -77,7 +48,7 @@ public:
 
 protected:
     curl::curl_t curl;
-    const ShutdownEvent &shutdown_event;
+    const utils::ShutdownEvent &shutdown_event;
 
     unsigned long timeout = 0;
     const char *ip_addr;
@@ -123,7 +94,7 @@ public:
      *
      * @warning not thread safe
      */
-    Speedtest(const ShutdownEvent &shutdown_event, 
+    Speedtest(const utils::ShutdownEvent &shutdown_event, 
               bool secure = false,
               const char *useragent = default_useragent,
               unsigned long timeout = 0,

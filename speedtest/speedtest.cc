@@ -6,12 +6,7 @@
 #include <cstdarg>
 
 namespace speedtest {
-bool FakeShutdownEvent::has_event() const noexcept
-{
-    return false;
-}
-
-Speedtest::Speedtest(const ShutdownEvent &shutdown_event, 
+Speedtest::Speedtest(const utils::ShutdownEvent &shutdown_event, 
                      bool secure,
                      const char *useragent,
                      unsigned long timeout,
