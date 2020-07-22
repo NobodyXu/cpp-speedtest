@@ -59,7 +59,7 @@ void Speedtest::enable_verbose(Verbose_level level, FILE *stderr_stream) noexcep
 }
 void Speedtest::error(const char *fmt, ...) noexcept
 {
-    if (verbose_level == Verbose_level::error && stderr_stream != nullptr) {
+    if (verbose_level & Verbose_level::error && stderr_stream != nullptr) {
         va_list ap;
         va_start(ap, fmt);
         std::vfprintf(stderr_stream, fmt, ap);
@@ -68,7 +68,7 @@ void Speedtest::error(const char *fmt, ...) noexcept
 }
 void Speedtest::debug(const char *fmt, ...) noexcept
 {
-    if (verbose_level == Verbose_level::debug && stderr_stream != nullptr) {
+    if (verbose_level & Verbose_level::debug && stderr_stream != nullptr) {
         va_list ap;
         va_start(ap, fmt);
         std::vfprintf(stderr_stream, fmt, ap);
