@@ -1,22 +1,18 @@
 #include "utils/print_curr_exception.hpp"
-#include <err.h>
+#include "utils/sigaction.hpp"
 
-#include <csignal>
+#include <cstdlib>
 
 int main(int argc, char* argv[])
 {
     // Print exception thrown by STD c++ lib,
     // as the default msg when -fno-exceptions is
     // enabled is useless.
-    struct sigaction act;
-    act.sa_handler = [](int signum) noexcept
+    speedtest::utils::sigaction(SIGABRT, [](int signum) noexcept
     {
         speedtest::utils::print_curr_exception();
-    };
-    if (sigaction(SIGABRT, &act, nullptr) == -1)
-        err(1, "Attempt to register SIGABRT failed");
-
-    ;
+        std::exit(1);
+    });
 
     return 0;
 }
