@@ -115,6 +115,9 @@ public:
      * verbose mode is disabled by default.
      *
      * @param level or-ed value of Verbose_level
+     *        <br>If Verbose_level::verbose_curl is added, only curl::Easy_t created
+     *        after this call would be affected.
+     *        <br>It is adviced that you set verbose before doing anything else.
      */
     void enable_verbose(Verbose_level level, FILE *stderr_stream) noexcept;
 
