@@ -399,7 +399,10 @@ public:
             Ret_except<std::pair<std::vector<Server_id>, std::size_t>, std::bad_alloc>;
     };
 
-    ;
+    /**
+     * @param url must tbe the same format as Config::Candidate_servers::Server::url.
+     */
+    auto download(const Config &config, const char *url) noexcept;
 };
 } /* namespace speedtest */
 
