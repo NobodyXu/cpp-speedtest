@@ -231,13 +231,13 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
      * with '?thread=4' is 221658, thus reserve 222000.
      */
     response.reserve(222000);
+    easy_ref.set_readall_writeback(response);
 
     for (std::size_t i = 0; urls[i] != nullptr; ++i) {
         if (auto result = speedtest.set_url(easy_ref, {urls[i], query}); result.has_exception_set())
             return {result};
 
         response.clear();
-        easy_ref.set_readall_writeback(response);
 
         if (auto result = perform_and_check(__PRETTY_FUNCTION__); result.has_exception_set())
             return {result};
