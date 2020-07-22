@@ -345,6 +345,12 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
     // the additional byte is for the trail_num
     speedtest.reserve_built_url(69 + query_prefix.size() + sizeof(url_params) + 1);
 
+    easy_ref.set_writeback(Speedtest::null_writeback, nullptr);
+
+    // Disable all compression methods.
+    if (auto result = easy_ref.set_encoding(nullptr); result.has_exception_set())
+        return {result};
+
     std::pair<std::vector<Server_id>, std::size_t> ret;
     auto &best_servers = ret.first;
     auto &lowest_latency = ret.second;
@@ -369,12 +375,6 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
                             server_id, int(url[0]));
             continue;
         }
-
-        easy_ref.set_writeback(Speedtest::null_writeback, nullptr);
-
-        // Disable all compression methods.
-        if (auto result = easy_ref.set_encoding(nullptr); result.has_exception_set())
-            return {result};
 
         std::snprintf(url_params, sizeof(url_params), "%" PRIu64 ".", utils::get_unix_timestamp_ms());
 
