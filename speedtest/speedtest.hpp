@@ -181,14 +181,6 @@ public:
         struct GeoPosition {
             float lat;
             float lon;
-
-            struct Hash {
-                static_assert(sizeof(float) <= 4, "float on this platform does not follow IEEE 754 format");
-
-                std::size_t operator () (const GeoPosition &g) const noexcept;
-            };
-
-            friend bool operator == (const GeoPosition &x, const GeoPosition &y) noexcept;
         };
 
         /**
