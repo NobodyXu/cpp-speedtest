@@ -271,6 +271,11 @@ public:
         using Ret = glue_ret_except_t<curl::Easy_ref_t::perform_ret_t, 
                                       Ret_except<void, xml_parse_error, Error_Response_code>>;
 
+        /**
+         * @return If std::bad_alloc, then both speedtest and config is in an undefined
+         *         state.
+         *         <br>Attempt to use them will be Undefine Behavior.
+         */
         auto get_config() noexcept -> Ret;
 
         struct Candidate_servers {
@@ -354,6 +359,9 @@ public:
          *             <br>Should formatted like server_list_urls.
          *
          * @return number of urls read in successfully.
+         *         If std::bad_alloc, then both speedtest and config is in an undefined
+         *         state.
+         *         <br>Attempt to use them will be Undefine Behavior.
          *
          * Get list of servers from preconfigured site.
          */
@@ -368,6 +376,9 @@ public:
          *       called on this object again.
          * @return lists of server that has the lowest latency and 
          *         the lowest latency in ms.
+         *         <br>If std::bad_alloc, then both speedtest and config is in an undefined
+         *         state.
+         *         <br>Attempt to use them will be Undefine Behavior.
          *
          * get_best_server will test every candidates.closest_servers
          * and returns the one with lowest average transfer time for fixed
