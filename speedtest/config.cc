@@ -338,10 +338,11 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
 
     static constexpr const std::string_view query_prefix = "/latency.txt?x=";
     // the 20-byte is for the unix timestamp in ms.
-    char unix_timestamp_ms[21];
+    // the additional 2 bytes is for the .trail_num
+    char url_params[20 + 2 + 1];
 
     // The longest element of servers I observed is 69-byte long
-    speedtest.reserve_built_url(69 + query_prefix.size() + sizeof(unix_timestamp_ms));
+    speedtest.reserve_built_url(69 + query_prefix.size() + sizeof(url_params));
 
     std::pair<std::vector<Server_id>, std::size_t> ret;
     auto &best_servers = ret.first;
@@ -374,26 +375,38 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
         if (auto result = easy_ref.set_encoding(nullptr); result.has_exception_set())
             return {result};
 
+        using utils::get_unix_timestamp_ms;
+        auto offset = std::snprintf(url_params, sizeof(url_params), "%" PRIu64 ".", get_unix_timestamp_ms());
+        url_params[offset] = 'p'; // A placeholder is put here
+        url_params[offset + 1] = '\0';
+
+        std::string_view url_params_sv = url_params;
+
         std::size_t cummulated_time = 0;
         for (char i = 0; i != 3; ++i) {
-            using utils::get_unix_timestamp_ms;
-            std::snprintf(unix_timestamp_ms, sizeof(unix_timestamp_ms), "%" PRIu64 "", get_unix_timestamp_ms());
+            url_params[offset] = '0' + i;
 
             {
                 auto result = [&]() noexcept
                 {
-                    if (url[0] == 1)
+                    std::string_view url_sv{url.get() + 1};
+
+                    if (url[0] == 1) {
+                        // os.path.dirname(url)
+                        auto last_slash = std::strrchr(url_sv.data(), '/');
+                        url_sv.substr(0, last_slash - url_sv.data());
+
                         return speedtest.set_url(easy_ref, {
-                            std::string_view{url.get() + 1},
+                            url_sv,
                             query_prefix, 
-                            std::string_view(unix_timestamp_ms)
+                            url_params_sv
                         });
-                    else
+                    } else
                         return speedtest.set_url(easy_ref, {
-                            std::string_view{url.get() + 1}, 
-                            common_pattern,
+                            url_sv,
+                            common_pattern.substr(0, 15),
                             query_prefix, 
-                            std::string_view(unix_timestamp_ms)
+                            url_params_sv
                         });
                 }();
 
