@@ -64,6 +64,24 @@ Speedtest::Config::Candidate_servers::Server::Server(std::unique_ptr<char[]> &&u
     country_name{std::move(country_name)}
 {}
 
+auto Speedtest::Config::get_easy_ref() noexcept -> curl::Easy_ref_t
+{
+    if (!easy)
+        easy = speedtest.create_easy();
+    return {easy.get()};
+}
+
+void Speedtest::Config::Candidate_servers::Server::append_dirname_url(const char *url, std::string &built_url) 
+    noexcept
+{
+    if (url[0] == 1)
+        built_url.append(utils::dirname(url + 1));
+    else {
+        built_url.append(url + 1);
+        built_url.append(common_pattern.substr(0, 15));
+    }
+}
+
 static auto xml2geoposition(pugi::xml_node &xml_node)
 {
     Speedtest::Config::GeoPosition position;
@@ -72,13 +90,6 @@ static auto xml2geoposition(pugi::xml_node &xml_node)
     position.lon = xml_node.attribute("lon").as_float();
 
     return position;
-}
-
-auto Speedtest::Config::get_easy_ref() noexcept -> curl::Easy_ref_t
-{
-    if (!easy)
-        easy = speedtest.create_easy();
-    return {easy.get()};
 }
 
 auto Speedtest::Config::get_config() noexcept -> Ret
@@ -327,12 +338,7 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
         auto &built_url = speedtest.built_url;
         auto original_sz = built_url.size();
 
-        if (url[0] == 1)
-            built_url.append(utils::dirname(url.get() + 1));
-        else {
-            built_url.append(url.get() + 1);
-            built_url.append(common_pattern.substr(0, 15));
-        }
+        Candidate_servers::Server::append_dirname_url(url.get(), built_url);
 
         built_url.append(query_prefix);
         built_url.append(url_params);

@@ -283,6 +283,11 @@ public:
                 static constexpr const std::string_view common_pattern = ":8080/speedtest/upload.php";
 
                 /**
+                 * Convenience function.
+                 */
+                static void append_dirname_url(const char *url, std::string &built_url) noexcept;
+
+                /**
                  * If url.get()[0] == 1, then url contains hostname:port/path;
                  * If url.get()[1] == 2, then url contains hostname only,
                  * and the port is predefined to be 8080, path predefined to be 
