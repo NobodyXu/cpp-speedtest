@@ -337,12 +337,13 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
         return {std::bad_alloc{}};
 
     static constexpr const std::string_view query_prefix = "/latency.txt?x=";
-    // the 20-byte is for the unix timestamp in ms.
-    // the additional 2 bytes is for the .trail_num
-    char url_params[20 + 2 + 1];
+    // the 20-byte is for the unix timestamp in ms 
+    // plus trailing '.'.
+    char url_params[20 + 1 + 1];
 
     // The longest element of servers I observed is 69-byte long
-    speedtest.reserve_built_url(69 + query_prefix.size() + sizeof(url_params));
+    // the additional byte is for the trail_num
+    speedtest.reserve_built_url(69 + query_prefix.size() + sizeof(url_params) + 1);
 
     std::pair<std::vector<Server_id>, std::size_t> ret;
     auto &best_servers = ret.first;
@@ -375,44 +376,32 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
         if (auto result = easy_ref.set_encoding(nullptr); result.has_exception_set())
             return {result};
 
-        using utils::get_unix_timestamp_ms;
-        auto offset = std::snprintf(url_params, sizeof(url_params), "%" PRIu64 ".", get_unix_timestamp_ms());
-        url_params[offset] = 'p'; // A placeholder is put here
-        url_params[offset + 1] = '\0';
+        std::snprintf(url_params, sizeof(url_params), "%" PRIu64 ".", utils::get_unix_timestamp_ms());
 
-        std::string_view url_params_sv = url_params;
+        auto &built_url = speedtest.built_url;
+        auto original_sz = built_url.size();
+
+        std::string_view url_sv{url.get() + 1};
+        if (url[0] == 1) {
+            // os.path.dirname(url)
+            auto last_slash = std::strrchr(url_sv.data(), '/');
+            url_sv.substr(0, last_slash - url_sv.data());
+        }
+        built_url.append(url_sv);
+        if (url[0] == 2)
+            built_url.append(common_pattern.substr(0, 15));
+
+        built_url.append(query_prefix);
+        built_url.append(url_params);
+
+        built_url += 'p'; // placeholder
 
         std::size_t cummulated_time = 0;
         for (char i = 0; i != 3; ++i) {
-            url_params[offset] = '0' + i;
+            built_url[built_url.size() - 1] = '0' + i;
 
-            {
-                auto result = [&]() noexcept
-                {
-                    std::string_view url_sv{url.get() + 1};
-
-                    if (url[0] == 1) {
-                        // os.path.dirname(url)
-                        auto last_slash = std::strrchr(url_sv.data(), '/');
-                        url_sv.substr(0, last_slash - url_sv.data());
-
-                        return speedtest.set_url(easy_ref, {
-                            url_sv,
-                            query_prefix, 
-                            url_params_sv
-                        });
-                    } else
-                        return speedtest.set_url(easy_ref, {
-                            url_sv,
-                            common_pattern.substr(0, 15),
-                            query_prefix, 
-                            url_params_sv
-                        });
-                }();
-
-                if (result.has_exception_set())
-                    return {result};
-            }
+            if (auto result = easy_ref.set_url(built_url.c_str()); result.has_exception_set())
+                return {result};
 
             if (auto result = perform_and_check(__PRETTY_FUNCTION__); result.has_exception_set())
                 return {result};
@@ -424,6 +413,8 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
             } else
                 cummulated_time += 3600;
         }
+
+        built_url.resize(original_sz);
 
         if (cummulated_time < lowest_latency) {
             lowest_latency = cummulated_time;
