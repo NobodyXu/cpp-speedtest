@@ -360,8 +360,16 @@ public:
 
     /**
      * @param url must tbe the same format as Config::Candidate_servers::Server::url.
+     * @return download speed, bytes per second.
+     * @post just before this function return, if return value is larger than 100000 
+     *       and config.thread.upload < 8, config.thread.upload is set to 8.
+     *
+     * config.threads.download will decides how many connections can be run 
+     * in parallel.
+     * <br>You can modify that value manully.
      */
-    auto download(const Config &config, const char *url) noexcept;
+    auto download(Config &config, const char *url) noexcept -> 
+        Ret_except<std::size_t, std::bad_alloc>;
 };
 
 auto operator | (Speedtest::Verbose_level x, Speedtest::Verbose_level y) noexcept -> Speedtest::Verbose_level;
