@@ -61,13 +61,6 @@ bool operator == (const Speedtest::Config::GeoPosition &x, const Speedtest::Conf
     return x.lat == y.lat && x.lon == y.lon;
 }
 
-std::size_t Speedtest::Config::Candidate_servers::string_hash::operator () (const string &s) const noexcept
-{
-    using type = std::string_view;
-    type sv = s.data();
-    return std::hash<type>{}(sv);
-}
-
 Speedtest::Config::Candidate_servers::Server::Server(std::unique_ptr<char[]> &&url, 
                                                      std::string &&server_name, 
                                                      std::string &&sponsor_name, 

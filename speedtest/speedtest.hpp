@@ -313,19 +313,6 @@ public:
                 Server& operator = (Server&&) = default;
             };
 
-            /**
-             * std::array is chosen to store country name here
-             * because store std::array<char, 32> or std::string
-             * both takes 32 bytes, but std::array<char, 32> is able to 
-             * pack 35 bytes (excluding null byte) without additional
-             * allocation.
-             */
-            using string = std::array<char, 32>;
-
-            struct string_hash {
-                std::size_t operator () (const string &s) const noexcept;
-            };
-
             std::unordered_map<Server_id, Server> servers;
 
             /**
