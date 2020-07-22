@@ -1,6 +1,7 @@
 #include "speedtest.hpp"
 
 #include "../curl-cpp/curl.hpp"
+#include "../curl-cpp/curl_multi.hpp"
 
 #include "../utils/type_name.hpp"
 
@@ -162,4 +163,35 @@ std::size_t Speedtest::null_writeback(char*, std::size_t, std::size_t size, void
     return size;
 }
 
+auto Speedtest::download(Config &config, const char *url) noexcept -> 
+    Ret_except<std::size_t, std::bad_alloc, curl::Exception>
+{
+    auto original_sz = built_url.size();
+
+    Config::Candidate_servers::Server::append_dirname_url(url, built_url);
+    built_url.append("/random");
+
+    curl::Multi_t multi;
+    if (auto result = curl.create_multi(); result.has_exception_set())
+        return {result};
+    else
+        multi = std::move(result).get_return_value();
+
+    if (curl.has_http2_multiplex_support())
+        multi.set_multiplexing(0);
+
+    for (auto &size: config.sizes.download) {
+        auto prev_sz = built_url.size();
+
+        // unsigned can occupy at most 10-bytes
+        char buffer[10 + 1 + 10 + 4 + 1];
+        std::snprintf(buffer, sizeof(buffer), "%u.%u.jpg", size, size);
+
+        built_url.resize(prev_sz);
+    }
+
+    std::size_t download_cnt;
+
+    return download_cnt /* / something */;
+}
 } /* namespace speedtest */
