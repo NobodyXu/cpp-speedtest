@@ -283,7 +283,21 @@ public:
                 static constexpr const std::string_view common_pattern = ":8080/speedtest/upload.php";
 
                 /**
+                 * @param url must be result of Server::url::get()
+                 *
                  * Convenience function.
+                 */
+                static void append_url(const char *url, std::string &built_url) noexcept;
+
+                /**
+                 * @param url must be result of Server::url::get()
+                 *
+                 * Convenience function.
+                 *
+                 * Equivalent to 
+                 *
+                 *     append_url(url, built_url);
+                 *     built_url = utils::dirname(built_url);
                  */
                 static void append_dirname_url(const char *url, std::string &built_url) noexcept;
 

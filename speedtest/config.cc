@@ -71,6 +71,13 @@ auto Speedtest::Config::get_easy_ref() noexcept -> curl::Easy_ref_t
     return {easy.get()};
 }
 
+void Speedtest::Config::Candidate_servers::Server::append_url(const char *url, std::string &built_url) noexcept
+{
+    built_url.append(url + 1);
+
+    if (url[0] == 2)
+        built_url.append(common_pattern);
+}
 void Speedtest::Config::Candidate_servers::Server::append_dirname_url(const char *url, std::string &built_url) 
     noexcept
 {
