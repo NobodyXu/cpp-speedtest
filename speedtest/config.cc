@@ -146,11 +146,10 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     unsigned upload_ratio = upload.attribute("ratio").as_uint();
     unsigned upload_max   = upload.attribute("maxchunkcount").as_uint();
 
-    auto start = upload_ratio - 1;
-    sizes.upload_len = sizes.up_sizes.size() - start;
-    std::uninitialized_copy(sizes.up_sizes.begin() + start, sizes.up_sizes.end(), sizes.upload);
+    sizes.upload_start = upload_ratio - 1;
+    auto upload_len = sizes.up_sizes.size() - sizes.upload_start;
 
-    counts.upload = upload_max / sizes.upload_len + upload_max % sizes.upload_len ? 1 : 0;
+    counts.upload = upload_max / upload_len + upload_max % upload_len ? 1 : 0;
     counts.download = download.attribute("threadsperurl").as_uint();
 
     threads.upload = upload.attribute("threads").as_uint();
@@ -159,7 +158,7 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     length.upload = upload.attribute("testlength").as_uint();
     length.download = download.attribute("testlength").as_uint();
 
-    this->upload_max = counts.upload * sizes.upload_len;
+    this->upload_max = counts.upload * upload_len;
 
     // Get client info
     utils::strncpy(client.ip, client_xml.attribute("ip").value());

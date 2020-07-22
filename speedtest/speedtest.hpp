@@ -214,8 +214,7 @@ public:
                 32768, 65536, 131072, 262144, 524288, 1048576, 7340032
             };
 
-            unsigned char upload_len = 0;
-            unsigned upload[up_sizes.size()];
+            unsigned char upload_start;
 
             unsigned download[10] = {
                 350, 500, 750, 1000, 1500, 2000, 2500,
