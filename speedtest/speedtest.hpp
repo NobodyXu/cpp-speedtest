@@ -66,12 +66,18 @@ protected:
      * @param url will be dupped thus can be freed after this call.
      *            <br>Have to be in format hostname:port/path?query. 
      *            <br>Otherwise, it is UNDEFINED BEHAVIOR.
+     *
+     * Just convenience function, access to speedtest.built_url is 
+     * considered valid as long as they reset it to its original size.
      */
     auto set_url(curl::Easy_ref_t easy_ref, std::initializer_list<std::string_view> parts) noexcept -> 
         Ret_except<void, std::bad_alloc>;
 
     /**
      * Reserve additional len for built_url.
+     *
+     * User should not call speedtest.built_url.reserve.
+     * <br>Instead, they should call this function.
      */
     void reserve_built_url(std::size_t len) noexcept;
 
