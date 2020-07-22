@@ -46,8 +46,13 @@ bool Speedtest::check_libcurl_support(FILE *stderr_stream) const noexcept
 bool operator & (Speedtest::Verbose_level x, Speedtest::Verbose_level y) noexcept
 {
     using type = std::underlying_type_t<Speedtest::Verbose_level>;
-    
+
     return static_cast<type>(x) & static_cast<type>(y);
+}
+auto operator | (Speedtest::Verbose_level x, Speedtest::Verbose_level y) noexcept -> Speedtest::Verbose_level
+{
+    using type = std::underlying_type_t<Speedtest::Verbose_level>;
+    return Speedtest::Verbose_level{static_cast<type>(x) | static_cast<type>(y)};
 }
 void Speedtest::enable_verbose(Verbose_level level, FILE *stderr_stream) noexcept
 {

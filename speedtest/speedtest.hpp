@@ -377,6 +377,8 @@ public:
      */
     auto download(const Config &config, const char *url) noexcept;
 };
+
+auto operator | (Speedtest::Verbose_level x, Speedtest::Verbose_level y) noexcept -> Speedtest::Verbose_level;
 } /* namespace speedtest */
 
 #endif
