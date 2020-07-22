@@ -101,6 +101,12 @@ public:
               unsigned long timeout = 0,
               const char *source_addr = nullptr) noexcept;
 
+    Speedtest(const Speedtest&) = delete;
+    Speedtest(Speedtest&&) = delete;
+
+    const Speedtest& operator = (const Speedtest&) = delete;
+    const Speedtest& operator = (Speedtest&&) = delete;
+
     /**
      * @param stderr_stream if not null, will print message
      *                      about what feature isn't supported to it.
