@@ -391,6 +391,10 @@ public:
     /**
      * @param url must tbe the same format as Config::Candidate_servers::Server::url.
      * @return download speed, bytes per second.
+     *         <br>If std::bad_alloc, then both speedtest and config is in an undefined
+     *         state.
+     *         <br>Attempt to use them will be Undefine Behavior.
+     *         
      * @post just before this function return, if return value is larger than 100000 
      *       and config.thread.upload < 8, config.thread.upload is set to 8.
      *
