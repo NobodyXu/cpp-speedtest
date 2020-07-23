@@ -174,7 +174,7 @@ std::size_t Speedtest::null_writeback(char*, std::size_t, std::size_t size, void
 }
 
 auto Speedtest::download(Config &config, const char *url) noexcept -> 
-    Ret_except<std::size_t, std::bad_alloc, curl::Exception>
+    Ret_except<std::size_t, std::bad_alloc, curl::Exception, curl::libcurl_bug>
 {
     using steady_clock = chrono::steady_clock;
     using Easy_ref_t = curl::Easy_ref_t;

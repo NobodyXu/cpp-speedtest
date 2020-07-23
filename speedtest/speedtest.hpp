@@ -414,7 +414,7 @@ public:
      * <br>You can modify that value manully.
      */
     auto download(Config &config, const char *url) noexcept -> 
-        Ret_except<std::size_t, std::bad_alloc, curl::Exception>;
+        Ret_except<std::size_t, std::bad_alloc, curl::Exception, curl::libcurl_bug>;
 };
 
 auto operator | (Speedtest::Verbose_level x, Speedtest::Verbose_level y) noexcept -> Speedtest::Verbose_level;
