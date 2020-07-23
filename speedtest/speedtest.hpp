@@ -393,6 +393,7 @@ public:
     };
 
     /**
+     * @pre config.threads.download != 0
      * @param url must tbe the same format as Config::Candidate_servers::Server::url.
      * @return download speed, bytes per second.
      *         <br>If std::bad_alloc, then both speedtest and config is in an undefined
