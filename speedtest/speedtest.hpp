@@ -21,7 +21,7 @@
 # include <array>
 # include <vector>
 # include <unordered_set>
-# include <unordered_map>
+# include <forward_list>
 
 # include <string>
 # include <string_view>
@@ -306,6 +306,8 @@ public:
                  */
                 static void append_dirname_url(const char *url, std::string &built_url) noexcept;
 
+                Server_id server_id;
+
                 /**
                  * If url.get()[0] == 1, then url contains hostname:port/path;
                  * If url.get()[1] == 2, then url contains hostname only,
@@ -321,7 +323,8 @@ public:
                 std::string country_name;
 
                 // Provide this for std::pair
-                Server(std::unique_ptr<char[]> &&url, 
+                Server(Server_id server_id,
+                       std::unique_ptr<char[]> &&url, 
                        std::string &&server_name, 
                        std::string &&sponsor_name, 
                        GeoPosition pos, 
@@ -331,7 +334,7 @@ public:
                 Server& operator = (Server&&) = default;
             };
 
-            std::unordered_map<Server_id, Server> servers;
+            std::forward_list<Server> servers;
 
             /**
              * shortest_distance is the distance between closest_servers
@@ -339,9 +342,9 @@ public:
              */
             double shortest_distance;
             /**
-             * Pointers of servers.
+             * Iterators into servers.
              */
-            std::vector<Server_id> closest_servers;
+            std::vector<typename std::forward_list<Server>::const_iterator> closest_servers;
         };
 
         static constexpr const char *server_list_urls[] = {

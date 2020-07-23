@@ -50,11 +50,13 @@ const char* Speedtest::Config::xml_parse_error::what() const noexcept
     return error;
 }
 
-Speedtest::Config::Candidate_servers::Server::Server(std::unique_ptr<char[]> &&url, 
+Speedtest::Config::Candidate_servers::Server::Server(Server_id server_id,
+                                                     std::unique_ptr<char[]> &&url, 
                                                      std::string &&server_name, 
                                                      std::string &&sponsor_name, 
                                                      GeoPosition pos, 
                                                      std::string &&country_name) noexcept:
+    server_id{server_id},
     url{std::move(url)},
 
     server_name{std::move(server_name)},
@@ -203,6 +205,8 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
 
     Candidate_servers candidates;
 
+    std::unordered_set<Server_id> known_servers;
+
     /**
      * On my machine, the maximum response I get from server_list_urls
      * with '?thread=4' is 221658, thus reserve 222000.
@@ -235,14 +239,17 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
         auto servers_xml = doc.child("settings").child("servers");
         for (auto &&server_xml: servers_xml.children("server")) {
             auto server_id = server_xml.attribute("id").as_llong();
+
+            if (known_servers.count(server_id))
+                continue;
             if (servers_include.size() != 0 && !servers_include.count(server_id))
                 continue;
             if (!servers_exclude.count(server_id))
                 continue;
             if (ignore_servers.count(server_id))
                 continue;
-            if (candidates.servers.count(server_id))
-                continue;
+
+            known_servers.emplace(server_id);
 
             static constexpr const auto &common_pattern = Candidate_servers::Server::common_pattern;
             std::string_view url = server_xml.attribute("url").value();
@@ -267,12 +274,12 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
 
             auto position = xml2geoposition(server_xml);
 
-            candidates.servers.try_emplace(server_id, 
-                                           std::move(url_ptr), 
-                                           server_xml.attribute("name").value(),
-                                           server_xml.attribute("sponsor").value(),
-                                           position, 
-                                           server_xml.attribute("country").value());
+            candidates.servers.emplace_front(server_id, 
+                                             std::move(url_ptr), 
+                                             server_xml.attribute("name").value(),
+                                             server_xml.attribute("sponsor").value(),
+                                             position, 
+                                             server_xml.attribute("country").value());
 
             auto d = utils::geo_distance(position.lat, position.lon, 
                                          client.geolocation.position.lat, client.geolocation.position.lon);
@@ -284,7 +291,7 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                 candidates.shortest_distance = d;
                 candidates.closest_servers.clear();
             }
-            candidates.closest_servers.emplace_back(server_id);
+            candidates.closest_servers.emplace_back(candidates.servers.cbegin());
         }
 
         ++candidates.url_parsed;
@@ -321,13 +328,9 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
 
     lowest_latency = std::numeric_limits<std::size_t>::max();
 
-    for (const auto &server_id: candidates.closest_servers) {
-        const auto it = candidates.servers.find(server_id);
-        if (it == candidates.servers.end()) {
-            speedtest.error("Can't find server with id = %ld\n", server_id);
-            continue;
-        }
-        const auto &url = it->second.url;
+    for (const auto &server_it: candidates.closest_servers) {
+        const auto &server_id = server_it->server_id;
+        const auto &url = server_it->url;
 
         static constexpr const auto &common_pattern = Candidate_servers::Server::common_pattern;
         if (!url) {
