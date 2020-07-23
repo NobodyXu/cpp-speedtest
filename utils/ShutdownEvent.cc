@@ -8,6 +8,7 @@ bool FakeShutdownEvent::has_event() const noexcept
     return false;
 }
 
+bool CtrlCShutdownEvent::is_triggered = false;
 CtrlCShutdownEvent::CtrlCShutdownEvent() noexcept
 {
     sigaction(SIGINT, [](int signum) noexcept
