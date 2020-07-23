@@ -9,6 +9,9 @@
 #include <cstdarg>
 
 #include <type_traits>
+#include <chrono>
+
+namespace chrono = std::chrono;
 
 namespace speedtest {
 Speedtest::Speedtest(const utils::ShutdownEvent &shutdown_event, 
@@ -134,10 +137,16 @@ void Speedtest::reserve_built_url(std::size_t len) noexcept
 
     built_url.reserve(original_size + len);
 }
+
 auto Speedtest::perform_and_check(curl::Easy_ref_t easy_ref, const char *fname) noexcept -> 
     Ret_except<bool, std::bad_alloc>
 {
-    if (auto result = easy_ref.perform(); result.has_exception_set()) {
+    return perform_and_check(easy_ref, easy_ref.perform(), fname);
+}
+auto Speedtest::perform_and_check(curl::Easy_ref_t easy_ref, curl::Easy_ref_t::perform_ret_t result, 
+                                  const char *fname) noexcept -> Ret_except<bool, std::bad_alloc>
+{
+    if (result.has_exception_set()) {
         if (result.has_exception_type<std::bad_alloc>())
             return {result};
 
@@ -158,6 +167,7 @@ auto Speedtest::perform_and_check(curl::Easy_ref_t easy_ref, const char *fname) 
 
     return true;
 }
+
 std::size_t Speedtest::null_writeback(char*, std::size_t, std::size_t size, void*) noexcept
 {
     return size;
@@ -166,6 +176,9 @@ std::size_t Speedtest::null_writeback(char*, std::size_t, std::size_t size, void
 auto Speedtest::download(Config &config, const char *url) noexcept -> 
     Ret_except<std::size_t, std::bad_alloc, curl::Exception>
 {
+    using steady_clock = chrono::steady_clock;
+    using Easy_ref_t = curl::Easy_ref_t;
+
     curl::Multi_t multi;
     if (auto result = curl.create_multi(); result.has_exception_set())
         return {result};
@@ -186,7 +199,7 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
      * a url generator to avoid memory consumption.
      */
     auto gen_url = [&, it = config.sizes.download.begin(), i = std::size_t{0},
-                          prev_sz = built_url.size()]() mutable noexcept ->
+                    prev_sz = built_url.size()]() mutable noexcept ->
         const char*
     {
         if (i == config.counts.download) {
@@ -227,8 +240,37 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
 
     std::size_t download_cnt;
 
+    auto start = steady_clock::now();
+
+    using Args_t = std::tuple<Speedtest&, std::size_t&, const char*, decltype(gen_url)&>;
+    Args_t args{*this, download_cnt, buit_url_cstr, gen_url};
+    do {
+        multi.perform([](Easy_ref_t &easy_ref, Easy_ref_t::perform_ret_t ret, curl::Multi_t &multi, void *arg)
+            noexcept
+        {
+            auto& [speedtest, download_cnt, buit_url_cstr, gen_url] = *static_cast<Args_t*>(arg);
+
+            if (speedtest.perform_and_check(easy_ref, ret, __PRETTY_FUNCTION__))
+                download_cnt += easy_ref.getinfo_sizeof_response_header() + 
+                                easy_ref.getinfo_sizeof_response_body();
+
+            if (buit_url_cstr) {
+                buit_url_cstr = gen_url();
+                if (buit_url_cstr) {
+                    easy_ref.set_url(buit_url_cstr);
+                    return;
+                }
+            }
+
+            multi.remove_easy(easy_ref);
+            curl::Easy_t easy{easy_ref.curl_easy};
+        }, &args);
+    } while (multi.break_or_poll().get_return_value() != -1);
+
+    auto seconds = chrono::duration_cast<chrono::seconds>(steady_clock::now() - start).count();
+
     built_url.resize(original_sz);
 
-    return download_cnt /* / something */;
+    return download_cnt / seconds;
 }
 } /* namespace speedtest */

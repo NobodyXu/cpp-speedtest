@@ -89,6 +89,12 @@ protected:
     auto perform_and_check(curl::Easy_ref_t easy_ref, const char *fname) noexcept -> 
         Ret_except<bool, std::bad_alloc>;
 
+    /**
+     * Check result and response code.
+     * @return true if perform succeeds and response code == 200, false if otherwise.
+     */
+    auto perform_and_check(curl::Easy_ref_t easy_ref, curl::Easy_ref_t::perform_ret_t result, 
+                           const char *fname) noexcept -> Ret_except<bool, std::bad_alloc>;
 
     static std::size_t null_writeback(char*, std::size_t, std::size_t size, void*) noexcept;
 
