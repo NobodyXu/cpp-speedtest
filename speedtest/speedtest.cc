@@ -242,16 +242,12 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
 
     auto start = steady_clock::now();
 
-    using Args_t = std::tuple<Speedtest&, std::size_t&, const char*, decltype(gen_url)&>;
-    Args_t args{*this, download_cnt, buit_url_cstr, gen_url};
     do {
         auto result = multi.perform(
-        [](Easy_ref_t &easy_ref, Easy_ref_t::perform_ret_t ret, curl::Multi_t &multi, void *arg)
+        [&](Easy_ref_t &easy_ref, Easy_ref_t::perform_ret_t ret, curl::Multi_t &multi, void*)
             noexcept
         {
-            auto& [speedtest, download_cnt, buit_url_cstr, gen_url] = *static_cast<Args_t*>(arg);
-
-            if (speedtest.perform_and_check(easy_ref, ret, __PRETTY_FUNCTION__))
+            if (perform_and_check(easy_ref, ret, __PRETTY_FUNCTION__))
                 download_cnt += easy_ref.getinfo_sizeof_response_header() + 
                                 easy_ref.getinfo_sizeof_response_body();
 
@@ -265,7 +261,7 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
 
             multi.remove_easy(easy_ref);
             curl::Easy_t easy{easy_ref.curl_easy};
-        }, &args);
+        }, nullptr);
 
         if (result.has_exception_set())
             return {result};
