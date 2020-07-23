@@ -242,35 +242,33 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
 
     auto start = steady_clock::now();
 
-    do {
-        bool oom = false;
-
-        auto result = multi.perform(
-        [&](Easy_ref_t &easy_ref, Easy_ref_t::perform_ret_t ret, curl::Multi_t &multi, void*)
-            noexcept
+    bool oom = false;
+    auto perform_callback = [&](Easy_ref_t &easy_ref, Easy_ref_t::perform_ret_t ret, curl::Multi_t &multi, void*)
+        noexcept
+    {
+        if (auto result = perform_and_check(easy_ref, ret, __PRETTY_FUNCTION__); 
+            result.has_exception_set()) 
         {
-            if (auto result = perform_and_check(easy_ref, ret, __PRETTY_FUNCTION__); 
-                result.has_exception_set()) 
-            {
-                oom = true;
-                result.Catch([](const auto&) noexcept {});
-            } else
-                download_cnt += easy_ref.getinfo_sizeof_response_header() + 
-                                easy_ref.getinfo_sizeof_response_body();
+            oom = true;
+            result.Catch([](const auto&) noexcept {});
+        } else
+            download_cnt += easy_ref.getinfo_sizeof_response_header() + 
+                            easy_ref.getinfo_sizeof_response_body();
 
+        if (buit_url_cstr) {
+            buit_url_cstr = gen_url();
             if (buit_url_cstr) {
-                buit_url_cstr = gen_url();
-                if (buit_url_cstr) {
-                    easy_ref.set_url(buit_url_cstr);
-                    return;
-                }
+                easy_ref.set_url(buit_url_cstr);
+                return;
             }
+        }
 
-            multi.remove_easy(easy_ref);
-            curl::Easy_t easy{easy_ref.curl_easy};
-        }, nullptr);
+        multi.remove_easy(easy_ref);
+        curl::Easy_t easy{easy_ref.curl_easy};
+    };
 
-        if (result.has_exception_set())
+    do {
+        if (auto result = multi.perform(perform_callback, nullptr); result.has_exception_set())
             return {result};
         if (oom)
             return {std::bad_alloc{}};
