@@ -245,7 +245,8 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
     using Args_t = std::tuple<Speedtest&, std::size_t&, const char*, decltype(gen_url)&>;
     Args_t args{*this, download_cnt, buit_url_cstr, gen_url};
     do {
-        multi.perform([](Easy_ref_t &easy_ref, Easy_ref_t::perform_ret_t ret, curl::Multi_t &multi, void *arg)
+        auto result = multi.perform(
+        [](Easy_ref_t &easy_ref, Easy_ref_t::perform_ret_t ret, curl::Multi_t &multi, void *arg)
             noexcept
         {
             auto& [speedtest, download_cnt, buit_url_cstr, gen_url] = *static_cast<Args_t*>(arg);
@@ -265,6 +266,9 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
             multi.remove_easy(easy_ref);
             curl::Easy_t easy{easy_ref.curl_easy};
         }, &args);
+
+        if (result.has_exception_set())
+            return {result};
     } while (multi.break_or_poll().get_return_value() != -1);
 
     auto seconds = chrono::duration_cast<chrono::seconds>(steady_clock::now() - start).count();
