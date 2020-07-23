@@ -166,11 +166,6 @@ std::size_t Speedtest::null_writeback(char*, std::size_t, std::size_t size, void
 auto Speedtest::download(Config &config, const char *url) noexcept -> 
     Ret_except<std::size_t, std::bad_alloc, curl::Exception>
 {
-    auto original_sz = built_url.size();
-
-    Config::Candidate_servers::Server::append_dirname_url(url, built_url);
-    built_url.append("/random");
-
     curl::Multi_t multi;
     if (auto result = curl.create_multi(); result.has_exception_set())
         return {result};
@@ -180,17 +175,59 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
     if (curl.has_http2_multiplex_support())
         multi.set_multiplexing(0);
 
-    for (auto &size: config.sizes.download) {
-        auto prev_sz = built_url.size();
+    auto original_sz = built_url.size();
 
-        // unsigned can occupy at most 10-bytes
-        char buffer[10 + 1 + 10 + 4 + 1];
-        std::snprintf(buffer, sizeof(buffer), "%u.%u.jpg", size, size);
+    Config::Candidate_servers::Server::append_dirname_url(url, built_url);
+    built_url.append("/random");
 
-        built_url.resize(prev_sz);
+    /**
+     * Since number of concurrent requests is limited by 
+     * config.threads.download, it is necessary to create 
+     * a url generator to avoid memory consumption.
+     */
+    auto gen_url = [&, it = config.sizes.download.begin(), i = std::size_t{0},
+                          prev_sz = built_url.size()]() mutable noexcept ->
+        const char*
+    {
+        if (i == config.counts.download) {
+            if (++it == config.sizes.download.end())
+                return nullptr;
+
+            built_url.resize(prev_sz);
+            i = 0;
+        }
+
+        if (i == 0) {
+            // unsigned can occupy at most 10-bytes
+            char buffer[10 + 1 + 10 + 4 + 1];
+            std::snprintf(buffer, sizeof(buffer), "%u.%u.jpg", *it, *it);
+            built_url.append(buffer);
+        }
+
+        ++i;
+
+        return built_url.c_str();
+    };
+
+    const char *buit_url_cstr;
+    for (std::size_t i = 0; i != config.threads.download && (buit_url_cstr = gen_url()); ++i) {
+        auto easy_ref = curl::Easy_ref_t{create_easy().release()};
+        if (!easy_ref.curl_easy)
+            return {std::bad_alloc{}};
+
+        easy_ref.set_url(buit_url_cstr);
+        easy_ref.set_writeback(null_writeback, nullptr);
+
+        // Disable all compression methods.
+        if (auto result = easy_ref.set_encoding(nullptr); result.has_exception_set())
+            return {result};
+
+        multi.add_easy(easy_ref);
     }
 
     std::size_t download_cnt;
+
+    built_url.resize(original_sz);
 
     return download_cnt /* / something */;
 }
