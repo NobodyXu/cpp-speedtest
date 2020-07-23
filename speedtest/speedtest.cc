@@ -243,11 +243,18 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
     auto start = steady_clock::now();
 
     do {
+        bool oom = false;
+
         auto result = multi.perform(
         [&](Easy_ref_t &easy_ref, Easy_ref_t::perform_ret_t ret, curl::Multi_t &multi, void*)
             noexcept
         {
-            if (perform_and_check(easy_ref, ret, __PRETTY_FUNCTION__))
+            if (auto result = perform_and_check(easy_ref, ret, __PRETTY_FUNCTION__); 
+                result.has_exception_set()) 
+            {
+                oom = true;
+                result.Catch([](const auto&) noexcept {});
+            } else
                 download_cnt += easy_ref.getinfo_sizeof_response_header() + 
                                 easy_ref.getinfo_sizeof_response_body();
 
@@ -265,6 +272,8 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
 
         if (result.has_exception_set())
             return {result};
+        if (oom)
+            return {std::bad_alloc{}};
     } while (multi.break_or_poll().get_return_value() != -1);
 
     auto seconds = chrono::duration_cast<chrono::seconds>(steady_clock::now() - start).count();
