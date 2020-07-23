@@ -5,11 +5,11 @@
 #include <cstring>
 
 namespace speedtest::utils {
-auto split2long_set(std::unordered_set<long> &set, const char *str, 
-                    std::size_t delimiter_sz, int base) noexcept -> const char*
+auto split2long_set(void (*callback)(long integer, void *arg), void *arg,
+                    const char *str, std::size_t delimiter_sz, int base) noexcept -> const char*
 {
+    errno = 0;
     if (str && str[0] != '\0') {
-        errno = 0;
         for (char *endptr; ; str = endptr + delimiter_sz) {
             auto val = std::strtol(str, &endptr, base);
 
@@ -20,7 +20,7 @@ auto split2long_set(std::unordered_set<long> &set, const char *str,
             if (errno != 0)
                 break;
 
-            set.emplace(val);
+            callback(val, arg);
 
             // If no more integers to be read in, break
             if (endptr[0] == '\0')

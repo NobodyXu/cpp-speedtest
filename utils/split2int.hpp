@@ -1,9 +1,11 @@
 #ifndef  __cpp_speedest_utils_split2int_HPP__
 # define __cpp_speedest_utils_split2int_HPP__
 
-# include <unordered_set>
+# include <cstddef>
 
 namespace speedtest::utils {
+auto split2long_set(void (*callback)(long integer, void *arg), void *arg,
+                    const char *str, std::size_t delimiter_sz = 1, int base = 10) noexcept -> const char*;
 /**
  * @param str can be delimited by any delimiter;
  *            <br> It can be nullptr or "".
@@ -18,9 +20,15 @@ namespace speedtest::utils {
  * If errno == ERANGE, then the integer is too big for long.
  * If errno == EINVAL, then base 10 is not supported.
  */
-auto split2long_set(std::unordered_set<long> &set, const char *str, 
-                    std::size_t delimiter_sz = 1, int base = 10) noexcept -> 
-    const char*;
+template <class Container>
+auto split2long_set(Container &set, const char *str, 
+                    std::size_t delimiter_sz = 1, int base = 10) noexcept -> const char*
+{
+    return split2long_set([](long integer, void *arg)
+    {
+        static_cast<Container*>(arg)->emplace(integer);
+    }, &set, str, delimiter_sz, base);
+}
 } /* namespace speedtest::utils */
 
 #endif

@@ -20,7 +20,7 @@
 
 # include <array>
 # include <vector>
-# include <unordered_set>
+# include <set>
 # include <forward_list>
 
 # include <string>
@@ -188,7 +188,7 @@ public:
         /**
          * Id of servers ignored
          */
-        std::unordered_set<Server_id> ignore_servers;
+        std::set<Server_id> ignore_servers;
 
         struct Sizes {
             static constexpr const std::array up_sizes{
@@ -369,8 +369,8 @@ public:
          *
          * Get list of servers from preconfigured site.
          */
-        auto get_servers(const std::unordered_set<Server_id> *servers_include_p = nullptr, 
-                         const std::unordered_set<Server_id> *servers_exclude_p = nullptr, 
+        auto get_servers(const std::set<Server_id> *servers_include_p = nullptr, 
+                         const std::set<Server_id> *servers_exclude_p = nullptr, 
                          const char * const urls[] = server_list_urls) noexcept -> 
             Ret_except<Candidate_servers, std::bad_alloc>;
 
