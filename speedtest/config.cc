@@ -244,7 +244,7 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> &servers
                 continue;
             if (servers_include.size() != 0 && !servers_include.count(server_id))
                 continue;
-            if (!servers_exclude.count(server_id))
+            if (servers_exclude.count(server_id))
                 continue;
             if (ignore_servers.count(server_id))
                 continue;
