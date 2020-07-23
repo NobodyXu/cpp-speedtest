@@ -184,8 +184,8 @@ auto Speedtest::Config::get_config() noexcept -> Ret
     return curl::Easy_ref_t::code::ok;
 }
 
-auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> *servers_include_p, 
-                                    const std::unordered_set<Server_id> *servers_exclude_p, 
+auto Speedtest::Config::get_servers(const std::set<Server_id> *servers_include_p, 
+                                    const std::set<Server_id> *servers_exclude_p, 
                                     const char * const urls[]) noexcept ->
     Ret_except<Candidate_servers, std::bad_alloc>
 {
@@ -205,7 +205,7 @@ auto Speedtest::Config::get_servers(const std::unordered_set<Server_id> *servers
 
     Candidate_servers candidates;
 
-    std::unordered_set<Server_id> known_servers;
+    std::set<Server_id> known_servers;
 
     /**
      * On my machine, the maximum response I get from server_list_urls
