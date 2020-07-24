@@ -348,8 +348,6 @@ auto Speedtest::upload(Config &config, const char *url) noexcept ->
         return config.sizes.up_sizes[i];
     };
 
-    std::vector<std::size_t> upload_cnts(config.threads.upload, 0);
-
     std::size_t upload_size;
     for (std::size_t i = 0; i != config.threads.upload && (upload_size = gen_upload_size()) != -1; ++i) {
         auto easy_ref = curl::Easy_ref_t{create_easy().release()};
@@ -358,13 +356,61 @@ auto Speedtest::upload(Config &config, const char *url) noexcept ->
 
         easy_ref.set_url(built_url.c_str());
         easy_ref.set_writeback(null_writeback, nullptr);
-        easy_ref.request_post(gen_upload_data, &upload_cnts[i], upload_size);
+
+        auto *upload_cnt = new (std::nothrow) std::size_t{0};
+        if (!upload_cnt)
+            return {std::bad_alloc{}};
+
+        easy_ref.set_private(upload_cnt);
+        easy_ref.request_post(gen_upload_data, upload_cnt, upload_size);
 
         multi.add_easy(easy_ref);
     }
 
+    std::size_t upload_cnt;
+
+    auto start = steady_clock::now();
+
+    bool oom = false;
+    auto perform_callback = [&](Easy_ref_t &easy_ref, Easy_ref_t::perform_ret_t ret, curl::Multi_t &multi, void*)
+        noexcept
+    {
+        if (auto result = perform_and_check(easy_ref, ret, __PRETTY_FUNCTION__); 
+            result.has_exception_set()) 
+        {
+            oom = true;
+            result.Catch([](const auto&) noexcept {});
+        } else
+            upload_cnt += easy_ref.getinfo_sizeof_uploaded(); 
+
+        auto *cnt = static_cast<std::size_t*>(easy_ref.get_private());
+
+        if (upload_size == -1) {
+            upload_size = gen_upload_size();
+            if (upload_size != -1) {
+                *cnt = 0;
+                easy_ref.request_post(gen_upload_data, cnt, upload_size);
+                return;
+            }
+        }
+
+        delete cnt;
+        multi.remove_easy(easy_ref);
+        curl::Easy_t easy{easy_ref.curl_easy};
+    };
+
+    do {
+        if (auto result = multi.perform(perform_callback, nullptr); result.has_exception_set())
+            return {result};
+        if (oom)
+            return {std::bad_alloc{}};
+    } while (multi.break_or_poll().get_return_value() != -1);
+
+    auto seconds = chrono::duration_cast<chrono::seconds>(steady_clock::now() - start).count();
+    auto upload_speed = upload_cnt / seconds;
+
     built_url.resize(original_sz);
 
-    ;
+    return upload_speed;
 }
 } /* namespace speedtest */
