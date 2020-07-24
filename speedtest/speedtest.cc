@@ -326,7 +326,22 @@ auto Speedtest::upload(Config &config, const char *url) noexcept ->
     auto original_sz = built_url.size();
     Config::Candidate_servers::Server::append_url(url, built_url);
 
-    ;
+    auto gen_upload_size = [&, i = config.sizes.upload_start, j = std::size_t{0}]() mutable noexcept ->
+        std::size_t
+    {
+        if (j == config.counts.upload) {
+            if (++i == config.sizes.up_sizes.size()) {
+                --i; // so that if this function get called next time, it would still returns -1
+                return -1;
+            }
+
+            j = 0;
+        }
+
+        ++j;
+
+        return config.sizes.up_sizes[i];
+    };
 
     // void Easy_ref_t::request_post(const void *data, std::size_t len) noexcept;
 
