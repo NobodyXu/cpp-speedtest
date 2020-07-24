@@ -275,9 +275,13 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
     } while (multi.break_or_poll().get_return_value() != -1);
 
     auto seconds = chrono::duration_cast<chrono::seconds>(steady_clock::now() - start).count();
+    auto download_speed = download_cnt / seconds;
 
     built_url.resize(original_sz);
 
-    return download_cnt / seconds;
+    if (download_speed > 100000)
+        config.threads.upload = 8;
+
+    return download_speed;
 }
 } /* namespace speedtest */
