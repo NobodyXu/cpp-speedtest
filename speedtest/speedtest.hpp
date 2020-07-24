@@ -405,7 +405,7 @@ public:
      *         <br>If std::bad_alloc, then both speedtest and config is in an undefined
      *         state.
      *         <br>Attempt to use them will be Undefine Behavior.
-     *         
+     *
      * @post just before this function return, if return value is larger than 100000 
      *       and config.thread.upload < 8, config.thread.upload is set to 8.
      *
@@ -414,6 +414,21 @@ public:
      * <br>You can modify that value manully.
      */
     auto download(Config &config, const char *url) noexcept -> 
+        Ret_except<std::size_t, std::bad_alloc, curl::Exception, curl::libcurl_bug>;
+
+    /**
+     * @pre config.threads.upload != 0
+     * @param url must tbe the same format as Config::Candidate_servers::Server::url.
+     * @return upload speed, bytes per second.
+     *         <br>If std::bad_alloc, then both speedtest and config is in an undefined
+     *         state.
+     *         <br>Attempt to use them will be Undefine Behavior.
+     *
+     * config.threads.upload will decides how many connections can be run 
+     * in parallel.
+     * <br>You can modify that value manully.
+     */
+    auto upload(Config &config, const char *url) noexcept -> 
         Ret_except<std::size_t, std::bad_alloc, curl::Exception, curl::libcurl_bug>;
 };
 
