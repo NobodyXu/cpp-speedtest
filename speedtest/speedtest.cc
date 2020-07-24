@@ -46,6 +46,11 @@ bool Speedtest::check_libcurl_support(FILE *stderr_stream) const noexcept
         return false;
     }
 
+    if (!curl.has_private_ptr_support()) {
+        printer("CURLOPT_PRIVATE not supported");
+        return false;
+    }
+
     return true;
 }
 
@@ -343,7 +348,20 @@ auto Speedtest::upload(Config &config, const char *url) noexcept ->
         return config.sizes.up_sizes[i];
     };
 
-    // void Easy_ref_t::request_post(const void *data, std::size_t len) noexcept;
+    std::vector<std::size_t> upload_cnts(config.threads.upload, 0);
+
+    std::size_t upload_size;
+    for (std::size_t i = 0; i != config.threads.upload && (upload_size = gen_upload_size()) != -1; ++i) {
+        auto easy_ref = curl::Easy_ref_t{create_easy().release()};
+        if (!easy_ref.curl_easy)
+            return {std::bad_alloc{}};
+
+        easy_ref.set_url(built_url.c_str());
+        easy_ref.set_writeback(null_writeback, nullptr);
+        easy_ref.request_post(gen_upload_data, &upload_cnts[i], upload_size);
+
+        multi.add_easy(easy_ref);
+    }
 
     built_url.resize(original_sz);
 
