@@ -173,6 +173,19 @@ std::size_t Speedtest::null_writeback(char*, std::size_t, std::size_t size, void
     return size;
 }
 
+static auto create_multi(curl::curl_t &curl) noexcept -> Ret_except<curl::Multi_t, curl::Exception>
+{
+    curl::Multi_t multi;
+    if (auto result = curl.create_multi(); result.has_exception_set())
+        return std::move(result);
+    else
+        multi = std::move(result).get_return_value();
+
+    if (curl.has_http2_multiplex_support())
+        multi.set_multiplexing(0);
+
+    return std::move(multi);
+}
 auto Speedtest::download(Config &config, const char *url) noexcept -> 
     Ret_except<std::size_t, std::bad_alloc, curl::Exception, curl::libcurl_bug>
 {
@@ -180,13 +193,10 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
     using Easy_ref_t = curl::Easy_ref_t;
 
     curl::Multi_t multi;
-    if (auto result = curl.create_multi(); result.has_exception_set())
+    if (auto result = create_multi(curl); result.has_exception_set())
         return {result};
     else
         multi = std::move(result).get_return_value();
-
-    if (curl.has_http2_multiplex_support())
-        multi.set_multiplexing(0);
 
     auto original_sz = built_url.size();
 
@@ -283,5 +293,26 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
         config.threads.upload = 8;
 
     return download_speed;
+}
+
+auto Speedtest::upload(Config &config, const char *url) noexcept -> 
+    Ret_except<std::size_t, std::bad_alloc, curl::Exception, curl::libcurl_bug>
+{
+    using steady_clock = chrono::steady_clock;
+    using Easy_ref_t = curl::Easy_ref_t;
+
+    curl::Multi_t multi;
+    if (auto result = create_multi(curl); result.has_exception_set())
+        return {result};
+    else
+        multi = std::move(result).get_return_value();
+
+    auto original_sz = built_url.size();
+
+    Config::Candidate_servers::Server::append_url(url, built_url);
+
+    built_url.resize(original_sz);
+
+    ;
 }
 } /* namespace speedtest */
