@@ -295,6 +295,22 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
     return download_speed;
 }
 
+static std::size_t gen_upload_data(char *buffer, std::size_t size, std::size_t nitems, void *userp)
+{
+    auto bytes = size * nitems;
+    auto &i = *static_cast<std::size_t*>(userp);
+
+    static constexpr const std::string_view prefix{"content1="};
+    static constexpr const std::string_view chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (auto end = i + bytes; i != end; ++i) {
+        if (i < prefix.size())
+            buffer[i] = prefix[i];
+        else
+            buffer[i] = chars[(i - prefix.size()) % chars.size()];
+    }
+
+    return bytes;
+}
 auto Speedtest::upload(Config &config, const char *url) noexcept -> 
     Ret_except<std::size_t, std::bad_alloc, curl::Exception, curl::libcurl_bug>
 {
@@ -308,8 +324,11 @@ auto Speedtest::upload(Config &config, const char *url) noexcept ->
         multi = std::move(result).get_return_value();
 
     auto original_sz = built_url.size();
-
     Config::Candidate_servers::Server::append_url(url, built_url);
+
+    ;
+
+    // void Easy_ref_t::request_post(const void *data, std::size_t len) noexcept;
 
     built_url.resize(original_sz);
 
