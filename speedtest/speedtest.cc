@@ -354,25 +354,27 @@ auto Speedtest::upload(Config &config, const char *url) noexcept ->
         return config.sizes.up_sizes[i];
     };
 
-    std::size_t upload_size;
-    for (std::size_t i = 0; i != config.threads.upload && (upload_size = gen_upload_size()) != -1; ++i) {
-        auto easy_ref = curl::Easy_ref_t{create_easy().release()};
-        if (!easy_ref.curl_easy)
-            return {std::bad_alloc{}};
+    {
+        std::size_t upload_size;
+        for (std::size_t i = 0; i != config.threads.upload && (upload_size = gen_upload_size()) != -1; ++i) {
+            auto easy_ref = curl::Easy_ref_t{create_easy().release()};
+            if (!easy_ref.curl_easy)
+                return {std::bad_alloc{}};
 
-        if (auto result = easy_ref.set_url(built_url.c_str()); result.has_exception_set())
-            return {result};
+            if (auto result = easy_ref.set_url(built_url.c_str()); result.has_exception_set())
+                return {result};
 
-        easy_ref.set_writeback(null_writeback, nullptr);
+            easy_ref.set_writeback(null_writeback, nullptr);
 
-        auto *upload_cnt = new (std::nothrow) std::size_t{0};
-        if (!upload_cnt)
-            return {std::bad_alloc{}};
+            auto *upload_cnt = new (std::nothrow) std::size_t{0};
+            if (!upload_cnt)
+                return {std::bad_alloc{}};
 
-        easy_ref.set_private(upload_cnt);
-        easy_ref.request_post(gen_upload_data, upload_cnt, upload_size);
+            easy_ref.set_private(upload_cnt);
+            easy_ref.request_post(gen_upload_data, upload_cnt, upload_size);
 
-        multi.add_easy(easy_ref);
+            multi.add_easy(easy_ref);
+        }
     }
 
     std::size_t upload_cnt;
@@ -393,18 +395,15 @@ auto Speedtest::upload(Config &config, const char *url) noexcept ->
 
         auto *cnt = static_cast<std::size_t*>(easy_ref.get_private());
 
-        if (upload_size == -1) {
-            upload_size = gen_upload_size();
-            if (upload_size != -1) {
-                *cnt = 0;
-                easy_ref.request_post(gen_upload_data, cnt, upload_size);
-                return;
-            }
+        if (auto upload_size = gen_upload_size(); upload_size != -1) {
+            // Start another transfer
+            *cnt = 0;
+            easy_ref.request_post(gen_upload_data, cnt, upload_size);
+        } else {
+            delete cnt;
+            multi.remove_easy(easy_ref);
+            curl::Easy_t easy{easy_ref.curl_easy};
         }
-
-        delete cnt;
-        multi.remove_easy(easy_ref);
-        curl::Easy_t easy{easy_ref.curl_easy};
     };
 
     do {
