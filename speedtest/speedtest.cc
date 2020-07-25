@@ -9,6 +9,7 @@
 #include <cstdarg>
 
 #include <type_traits>
+#include <iterator>
 #include <chrono>
 
 namespace chrono = std::chrono;
@@ -218,8 +219,10 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
         const char*
     {
         if (i == config.counts.download) {
-            if (++it == config.sizes.download.end())
+            if (auto next = std::next(it); next == config.sizes.download.end())
                 return nullptr;
+            else
+                it = next;
 
             built_url.resize(prev_sz);
             i = 0;
@@ -237,20 +240,22 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
         return built_url.c_str();
     };
 
-    const char *buit_url_cstr;
-    for (std::size_t i = 0; i != config.threads.download && (buit_url_cstr = gen_url()); ++i) {
-        auto easy_ref = curl::Easy_ref_t{create_easy().release()};
-        if (!easy_ref.curl_easy)
-            return {std::bad_alloc{}};
+    {
+        const char *buit_url_cstr;
+        for (std::size_t i = 0; i != config.threads.download && (buit_url_cstr = gen_url()); ++i) {
+            auto easy_ref = curl::Easy_ref_t{create_easy().release()};
+            if (!easy_ref.curl_easy)
+                return {std::bad_alloc{}};
 
-        easy_ref.set_url(buit_url_cstr);
-        easy_ref.set_writeback(null_writeback, nullptr);
+            easy_ref.set_url(buit_url_cstr);
+            easy_ref.set_writeback(null_writeback, nullptr);
 
-        // Disable all compression methods.
-        if (auto result = easy_ref.set_encoding(nullptr); result.has_exception_set())
-            return {result};
+            // Disable all compression methods.
+            if (auto result = easy_ref.set_encoding(nullptr); result.has_exception_set())
+                return {result};
 
-        multi.add_easy(easy_ref);
+            multi.add_easy(easy_ref);
+        }
     }
 
     std::size_t download_cnt;
@@ -270,16 +275,12 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
             download_cnt += easy_ref.getinfo_sizeof_response_header() + 
                             easy_ref.getinfo_sizeof_response_body();
 
-        if (buit_url_cstr) {
-            buit_url_cstr = gen_url();
-            if (buit_url_cstr) {
-                easy_ref.set_url(buit_url_cstr);
-                return;
-            }
+        if (auto url_cstr = gen_url(); url_cstr) {
+            easy_ref.set_url(url_cstr);
+        } else {
+            multi.remove_easy(easy_ref);
+            curl::Easy_t easy{easy_ref.curl_easy};
         }
-
-        multi.remove_easy(easy_ref);
-        curl::Easy_t easy{easy_ref.curl_easy};
     };
 
     do {
