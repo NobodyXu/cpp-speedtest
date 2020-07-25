@@ -247,7 +247,9 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
             if (!easy_ref.curl_easy)
                 return {std::bad_alloc{}};
 
-            easy_ref.set_url(buit_url_cstr);
+            if (auto result = easy_ref.set_url(buit_url_cstr); result.has_exception_set())
+                return {result};
+
             easy_ref.set_writeback(null_writeback, nullptr);
 
             // Disable all compression methods.
@@ -276,7 +278,10 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
                             easy_ref.getinfo_sizeof_response_body();
 
         if (auto url_cstr = gen_url(); url_cstr) {
-            easy_ref.set_url(url_cstr);
+            if (auto result = easy_ref.set_url(url_cstr); result.has_exception_set()) {
+                oom = true;
+                result.Catch([](const auto&) noexcept {});
+            }
         } else {
             multi.remove_easy(easy_ref);
             curl::Easy_t easy{easy_ref.curl_easy};
@@ -355,7 +360,9 @@ auto Speedtest::upload(Config &config, const char *url) noexcept ->
         if (!easy_ref.curl_easy)
             return {std::bad_alloc{}};
 
-        easy_ref.set_url(built_url.c_str());
+        if (auto result = easy_ref.set_url(built_url.c_str()); result.has_exception_set())
+            return {result};
+
         easy_ref.set_writeback(null_writeback, nullptr);
 
         auto *upload_cnt = new (std::nothrow) std::size_t{0};
