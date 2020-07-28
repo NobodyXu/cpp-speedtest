@@ -401,7 +401,8 @@ auto Speedtest::upload(Config &config, const char *url) noexcept ->
              * should not redirect to any other site based on experience,
              * getinfo_sizeof_* should be precise.
              */
-            upload_cnt += easy_ref.getinfo_sizeof_uploaded(); 
+            upload_cnt += easy_ref.getinfo_sizeof_uploaded() + 
+                          easy_ref.getinfo_sizeof_request(); 
 
         auto *cnt = static_cast<std::size_t*>(easy_ref.get_private());
 
