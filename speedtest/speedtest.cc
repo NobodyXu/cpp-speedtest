@@ -274,6 +274,11 @@ auto Speedtest::download(Config &config, const char *url) noexcept ->
             oom = true;
             result.Catch([](const auto&) noexcept {});
         } else
+            /**
+             * Since there is no proxy and the speedtest site
+             * should not redirect to any other site based on experience,
+             * getinfo_sizeof_response_* should be precise.
+             */
             download_cnt += easy_ref.getinfo_sizeof_response_header() + 
                             easy_ref.getinfo_sizeof_response_body();
 
@@ -391,6 +396,11 @@ auto Speedtest::upload(Config &config, const char *url) noexcept ->
             oom = true;
             result.Catch([](const auto&) noexcept {});
         } else
+            /**
+             * Since there is no proxy and the speedtest site
+             * should not redirect to any other site based on experience,
+             * getinfo_sizeof_* should be precise.
+             */
             upload_cnt += easy_ref.getinfo_sizeof_uploaded(); 
 
         auto *cnt = static_cast<std::size_t*>(easy_ref.get_private());
