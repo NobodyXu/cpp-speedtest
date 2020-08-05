@@ -342,6 +342,8 @@ public:
 
             std::forward_list<Server> servers;
 
+            using Server_ref = std::forward_list<Server>::const_iterator;
+
             /**
              * shortest_distance is the distance between closest_servers
              * and current location.
@@ -350,7 +352,7 @@ public:
             /**
              * Iterators into servers.
              */
-            std::vector<typename std::forward_list<Server>::const_iterator> closest_servers;
+            std::vector<Server_ref> closest_servers;
         };
 
         static constexpr const char *server_list_urls[] = {
@@ -395,7 +397,7 @@ public:
          * amount of data.
          */
         auto get_best_server(Candidate_servers &candidates) noexcept ->
-            Ret_except<std::pair<std::vector<Server_id>, std::size_t>, std::bad_alloc>;
+            Ret_except<std::pair<std::vector<Candidate_servers::Server_ref>, std::size_t>, std::bad_alloc>;
     };
 
     /**

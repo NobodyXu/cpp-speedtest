@@ -301,7 +301,7 @@ auto Speedtest::Config::get_servers(const std::set<Server_id> *servers_include_p
 }
 
 auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept ->
-        Ret_except<std::pair<std::vector<Server_id>, std::size_t>, std::bad_alloc>
+    Ret_except<std::pair<std::vector<Candidate_servers::Server_ref>, std::size_t>, std::bad_alloc>
 {
     auto easy_ref = get_easy_ref();
     if (!easy_ref.curl_easy)
@@ -322,7 +322,7 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
     if (auto result = easy_ref.set_encoding(nullptr); result.has_exception_set())
         return {result};
 
-    std::pair<std::vector<Server_id>, std::size_t> ret;
+    std::pair<std::vector<Candidate_servers::Server_ref>, std::size_t> ret;
     auto &best_servers = ret.first;
     auto &lowest_latency = ret.second;
 
@@ -382,7 +382,7 @@ auto Speedtest::Config::get_best_server(Candidate_servers &candidates) noexcept 
         }
 
         if (cummulated_time == lowest_latency)
-            best_servers.emplace_back(server_id);
+            best_servers.emplace_back(server_it);
     }
 
     return std::move(ret);
