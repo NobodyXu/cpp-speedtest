@@ -37,14 +37,17 @@ int main(int argc, char* argv[])
         {
             std::puts("Retrieving candidate servers...");
             auto candidates = config.get_servers().get_return_value();
-
-            std::puts("Testing for best server...");
-            auto [best_server_ids, minimal_ping] = config.get_best_server(candidates).get_return_value();
-
             result.distance = candidates.shortest_distance;
-            result.ping = minimal_ping;
 
-            auto server_it = best_server_ids.front();
+            auto server_it = [&]() noexcept
+            {
+                std::puts("Testing for best server...");
+                auto [best_server_ids, minimal_ping] = config.get_best_server(candidates).get_return_value();
+
+                result.ping = minimal_ping;
+
+                return best_server_ids.front();
+            }();
 
             url = std::move(server_it->url);
 
