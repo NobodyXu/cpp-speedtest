@@ -3,7 +3,7 @@ LDFLAGS := -lpthread -Wl,--plugin-opt=O3,-O2,--discard-all,--strip-all,--gc-sect
 
 include curl-cpp/linking.mk
 
-CXXFLAGS += -flto -O3 -fno-exceptions -fno-rtti
+CXXFLAGS += -flto -O3 -fno-exceptions -fno-rtti -fno-asynchronous-unwind-tables -fno-unwind-tables 
 
 SRCS=$(shell find */* -type f -name '*.cc' -not -path ./test -not -path ./curl-cpp/)
 DEPS=$(SRCS:.cc=.d)
