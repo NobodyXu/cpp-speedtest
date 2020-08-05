@@ -342,7 +342,7 @@ public:
 
             std::forward_list<Server> servers;
 
-            using Server_ref = std::forward_list<Server>::const_iterator;
+            using Server_ref = std::forward_list<Server>::iterator;
 
             /**
              * shortest_distance is the distance between closest_servers

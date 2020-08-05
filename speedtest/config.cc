@@ -291,7 +291,7 @@ auto Speedtest::Config::get_servers(const std::set<Server_id> *servers_include_p
                 candidates.shortest_distance = d;
                 candidates.closest_servers.clear();
             }
-            candidates.closest_servers.emplace_back(candidates.servers.cbegin());
+            candidates.closest_servers.emplace_back(candidates.servers.begin());
         }
 
         ++candidates.url_parsed;
